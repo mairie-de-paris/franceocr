@@ -1,0 +1,9 @@
+version: '2'
+services:
+  web:
+    build: arch-ocr
+    volumes:
+        - ../api:/app/src:ro
+    ports:
+      - "127.0.0.1:5000:5000"
+    restart: always

@@ -1,0 +1,6 @@
+Flask
+Pillow
+argparse
+pytesseract
+coverage
+requests
