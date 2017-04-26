@@ -4,7 +4,9 @@ import imutils
 import math
 import numpy as np
 
-from skimage.filters import threshold_adaptive
+from skimage.filters import threshold_local, threshold_otsu
+from skimage.morphology import *
+from skimage.restoration import denoise_bilateral
 from transform import four_point_transform
 
 def edge_detect(channel):
@@ -79,20 +81,39 @@ def extract_document(image):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-    cv2.imwrite("../static/img/extracted.jpg", warped)
-
     return warped
 
 def improve_image(image):
     # convert the image to grayscale, then threshold it
     # to give it that 'black and white' paper effect
+    image = imutils.resize(image, height = 650)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    image = threshold_adaptive(image, 51, offset = 10)
+    thresh = threshold_local(image, 51, offset=13)
+    image = image > thresh
+
+    cv2.imshow("Threshold", image.astype("uint8") * 255)
+
+    # image = 1 - image
+    # image = skeletonize(image)
+    # image = binary_closing(image)
+    # image = image.astype("uint8") * 255
+    # image = binary_dilation(image)
+    # image = binary_erosion(image)
+    pepper = black_tophat(image)
+    pepper[:120, :] = 0
+    image[pepper] = 1
     image = image.astype("uint8") * 255
 
-    cv2.imwrite("../static/img/improved.jpg", image)
-    cv2.imshow("Scanned", imutils.resize(image, height = 650))
+    # erodeKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 1))
+    # image = cv2.erode(image, erodeKernel, iterations=1)
+    # erodeKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 2))
+    # image = cv2.erode(image, erodeKernel, iterations=1)
+    # erodeKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 1))
+    # image = cv2.erode(image, erodeKernel, iterations=4)
+
+    cv2.imshow("Improved", image)
     cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     return image
 
@@ -112,9 +133,9 @@ def compute_skew(image):
     rho_step = 1
     theta_step = np.pi / 180
     threshold = 100
-    min_line_length = image.shape[1] * 3.7
+    min_line_length = image.shape[1] * 0.6
     max_line_gap = 20
-    lines = cv2.HoughLinesP(edges, rho_step, theta_step, threshold, min_line_length, max_line_gap)
+    lines = cv2.HoughLinesP(edges, rho_step, theta_step, threshold, minLineLength=min_line_length, maxLineGap=max_line_gap)
 
     image_angle = 0
     for line in lines:
@@ -127,15 +148,43 @@ def compute_skew(image):
 
     # Mean image angle in degrees
     image_angle /= len(lines)
-    print(image_angle)
+    print("Document angle %s deg" % image_angle)
 
     cv2.imshow("Lines", orig)
     cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     return angle
 
+def deskew_image(image, angle):
+    rot_mat = cv2.getRotationMatrix2D((image.shape[0] / 2, image.shape[1] / 2), angle, 1)
+    height = image.shape[0]
+    width = image.shape[1]
+    rotated = cv2.warpAffine(image, rot_mat, (width, height), flags=cv2.INTER_CUBIC)
+
+    cv2.imshow("Rotated", imutils.resize(rotated, height = 500))
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    return rotated
+
+def remove_blur(image):
+    cv2.imshow('Original', imutils.resize(image, height = 500))
+
+    output = denoise_bilateral(imutils.resize(image, height = 200), sigma_color=0.05, sigma_spatial=15)
+
+    cv2.imshow("Unblurred", imutils.resize(output, height = 500))
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    return output
+
 if __name__ == "__main__":
-    image = cv2.imread("../static/img/louis4.jpg")
+    image = cv2.imread("../static/img/louis2.jpg")
     document = extract_document(image)
-    document = compute_skew(document)
-    # document = improve_image(document)
+    # remove_blur(document)
+    angle = compute_skew(document)
+    document = deskew_image(document, angle)
+    cv2.imwrite("../static/img/extracted.jpg", document)
+    document = improve_image(document)
+    cv2.imwrite("../static/img/improved.jpg", document)

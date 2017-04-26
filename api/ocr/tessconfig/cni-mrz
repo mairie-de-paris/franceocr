@@ -1,0 +1,10 @@
+load_system_dawg 0
+load_freq_dawg 0
+load_unambig_dawg 0
+load_punc_dawg 0
+load_number_dawg 0
+load_fixed_length_dawgs 0
+load_bigram_dawg 0
+wordrec_enable_assoc 0
+tessedit_char_whitelist 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ<
+user_patterns_file patterns/cni-mrz

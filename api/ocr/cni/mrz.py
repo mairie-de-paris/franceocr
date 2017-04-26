@@ -4,7 +4,7 @@ import numpy as np
 import pytesseract
 
 from PIL import Image, ImageFilter
-from extraction import find_significant_contours, improve_document
+from api.ocr.extraction import find_significant_contours
 from skimage.filters import threshold_adaptive
 
 
@@ -133,7 +133,7 @@ def extract_mrz(image):
 def read_mrz(image):
     image = Image.fromarray(image)
     image.filter(ImageFilter.SHARPEN)
-    mrz_data = pytesseract.image_to_string(image, lang="OCRB", config="tessconfig")
+    mrz_data = pytesseract.image_to_string(image, lang="OCRB", config="../tessconfig/cni-mrz")
     mrz_data = mrz_data.replace(' ', '')
     mrz_data = mrz_data.split('\n')
 
@@ -179,7 +179,7 @@ def mrz_to_dict(mrz):
     return values
 
 if __name__ == "__main__":
-    image = cv2.imread("../static/img/CNI.jpg")
+    image = cv2.imread("../../static/img/CNI3.jpg")
     roi = extract_mrz(image)
     mrz_data = read_mrz(roi)
     print(mrz_to_dict(mrz_data))
