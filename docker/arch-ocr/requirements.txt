@@ -4,3 +4,5 @@ argparse
 pytesseract
 coverage
 requests
+skimage
+imutils

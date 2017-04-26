@@ -1,31 +1,35 @@
-# import the necessary packages
-from imutils import paths
-import numpy as np
-import imutils
 import cv2
+import imutils
+import numpy as np
+import pytesseract
 
-def checksum_cni(string):
+from PIL import Image, ImageFilter
+from extraction import find_significant_contours, improve_document
+from skimage.filters import threshold_adaptive
+
+
+def checksum_mrz(string):
     factors = [7, 3, 1]
     result = 0
-    offset = 0
     for index, c in enumerate(string):
         if c == '<':
             val = 0
-        elif '0' <= c <= 'Z':
-            val = ord(c) - ord('0');
+        elif '0' <= c <= '9':
+            val = int(c)
+        elif 'A' <= c <= 'Z':
+            val = ord(c) - 55;
         else:
             raise ValueError
         result += val * factors[index % 3]
 
     return result % 10
 
-def extract_mrz(imagePath):
+def extract_mrz(image):
     # initialize a rectangular and square structuring kernel
-    rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (13, 5))
-    sqKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (31, 31))
+    rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (18, 8))
+    sqKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (18, 45))
 
-    # load the image, resize it, and convert it to grayscale
-    image = cv2.imread(imagePath)
+    # resize the image, and convert it to grayscale
     image = imutils.resize(image, height=600)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -41,22 +45,30 @@ def extract_mrz(imagePath):
     (minVal, maxVal) = (np.min(gradX), np.max(gradX))
     gradX = (255 * ((gradX - minVal) / (maxVal - minVal))).astype("uint8")
 
-    # cv2.imshow("GradX", gradX)
+    cv2.imshow("GradX", gradX)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     # apply a closing operation using the rectangular kernel to close
     # gaps in between letters -- then apply Otsu's thresholding method
     gradX = cv2.morphologyEx(gradX, cv2.MORPH_CLOSE, rectKernel)
     thresh = cv2.threshold(gradX, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
-    # cv2.imshow("Before", thresh)
+    cv2.imshow("Before", thresh)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     # perform another closing operation, this time using the square
     # kernel to close gaps between lines of the MRZ, then perform a
     # serieso of erosions to break apart connected components
+    thresh = cv2.erode(thresh, None, iterations=2)
     thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, sqKernel)
-    thresh = cv2.erode(thresh, None, iterations=4)
+    erodeKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (4, 4))
+    thresh = cv2.erode(thresh, erodeKernel, iterations=4)
 
-    # cv2.imshow("After", thresh)
+    cv2.imshow("After", thresh)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     # during thresholding, it's possible that border pixels were
     # included in the thresholding, so let's set 5% of the left and
@@ -67,15 +79,21 @@ def extract_mrz(imagePath):
 
     # find contours in the thresholded image and sort them by their
     # size
-    cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
-    cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
+    contours = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
     # loop over the contours
-    for c in cnts:
+    for contour in contours:
         # compute the bounding box of the contour and use the contour to
         # compute the aspect ratio and coverage ratio of the bounding box
         # width to the width of the image
-        (x, y, w, h) = cv2.boundingRect(c)
+
+        epsilon = 0.03 * cv2.arcLength(contour, True)
+        contour = cv2.approxPolyDP(contour, epsilon, True)
+
+        # cv2.drawContours(image, [contour], 0, (0,255,0),2, cv2.LINE_AA, maxLevel=1)
+
+        (x, y, w, h) = cv2.boundingRect(contour)
         ar = w / float(h)
         crWidth = w / float(gray.shape[1])
 
@@ -83,11 +101,11 @@ def extract_mrz(imagePath):
 
         # check to see if the aspect ratio and coverage width are within
         # acceptable criteria
-        if ar > 5 and crWidth > 0.7:
+        if 7 <= ar <= 15 and crWidth > 0.7:
             # pad the bounding box since we applied erosions and now need
             # to re-grow it
-            pX = int((x + w) * 0.03)
-            pY = int((y + h) * 0.03)
+            pX = int((x + w) * 0.04)
+            pY = int((y + h) * 0.05)
             (x, y) = (x - pX, y - pY)
             (w, h) = (w + (pX * 2), h + (pY * 2))
 
@@ -95,15 +113,73 @@ def extract_mrz(imagePath):
             # surrounding the MRZ
             roi = image[y:y + h, x:x + w].copy()
             cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            break
+            # break
+
+    cv2.imshow("Image", image)
+    cv2.waitKey(0)
 
     roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-    _, roi = cv2.threshold(roi, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    # _, roi = cv2.threshold(roi, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    roi = threshold_adaptive(roi, 27, offset = 11)
+    roi = roi.astype("uint8") * 255
 
     # show the output images
-    cv2.imshow("Image", image)
     cv2.imshow("ROI", roi)
     cv2.imwrite("roi.jpg", roi)
     cv2.waitKey(0)
 
-extract_mrz("../static/img/CNI3.jpg")
+    return roi
+
+def read_mrz(image):
+    image = Image.fromarray(image)
+    image.filter(ImageFilter.SHARPEN)
+    mrz_data = pytesseract.image_to_string(image, lang="OCRB", config="tessconfig")
+    mrz_data = mrz_data.replace(' ', '')
+    mrz_data = mrz_data.split('\n')
+
+    print(mrz_data)
+
+    assert(len(mrz_data) == 2)
+    assert(len(mrz_data[0]) == 36)
+    assert(len(mrz_data[1]) == 36)
+
+    return mrz_data
+
+def mrz_to_dict(mrz):
+    line1, line2 = mrz
+
+    assert(len(line1) == 36)
+    assert(len(line2) == 36)
+
+    values = {
+        "id": line1[0:2],
+        "country": line1[2:5],
+        "last_name": line1[5:30].rstrip("<"),
+        "adm_code": line1[30:36],
+        "emit_year": line2[0:2],
+        "emit_month": line2[2:4],
+        "adm_code2": line2[4:7],
+        "emit_code": line2[7:12],
+        "checksum_emit": line2[12],
+        "first_name": [first_name.replace("<", "-") for first_name in line2[13:27].rstrip("<").split("<<")],
+        "birth_year": line2[27:29],
+        "birth_month": line2[29:31],
+        "birth_day": line2[31:33],
+        "checksum_birth": line2[33],
+        "sex": line2[34],
+        "checksum": line2[35],
+    }
+
+    assert(values["id"] == "ID")
+    # assert(values["adm_code2"] == values["adm_code"][0:3])
+    assert(checksum_mrz(line2[0:12]) == int(values["checksum_emit"]))
+    assert(checksum_mrz(line2[27:33]) == int(values["checksum_birth"]))
+    assert(checksum_mrz(line1 + line2[:-1]) == int(values["checksum"]))
+
+    return values
+
+if __name__ == "__main__":
+    image = cv2.imread("../static/img/CNI.jpg")
+    roi = extract_mrz(image)
+    mrz_data = read_mrz(roi)
+    print(mrz_to_dict(mrz_data))
