@@ -7,7 +7,7 @@ import numpy as np
 from skimage.filters import threshold_local, threshold_otsu
 from skimage.morphology import *
 from skimage.restoration import denoise_bilateral
-from transform import four_point_transform
+from .transform import four_point_transform
 
 def edge_detect(channel):
     sobelX = cv2.Sobel(channel, cv2.CV_16S, 1, 0)

@@ -3,8 +3,8 @@ import imutils
 import numpy as np
 import pytesseract
 
-from PIL import Image, ImageFilter
-from api.ocr.extraction import find_significant_contours
+from franceocr.extraction import find_significant_contours
+from franceocr.ocr import ocr_cni_mrz
 from skimage.filters import threshold_adaptive
 
 
@@ -131,9 +131,7 @@ def extract_mrz(image):
     return roi
 
 def read_mrz(image):
-    image = Image.fromarray(image)
-    image.filter(ImageFilter.SHARPEN)
-    mrz_data = pytesseract.image_to_string(image, lang="OCRB", config="../tessconfig/cni-mrz")
+    mrz_data = ocr_cni_mrz(image)
     mrz_data = mrz_data.replace(' ', '')
     mrz_data = mrz_data.split('\n')
 
@@ -177,9 +175,3 @@ def mrz_to_dict(mrz):
     assert(checksum_mrz(line1 + line2[:-1]) == int(values["checksum"]))
 
     return values
-
-if __name__ == "__main__":
-    image = cv2.imread("../../static/img/CNI3.jpg")
-    roi = extract_mrz(image)
-    mrz_data = read_mrz(roi)
-    print(mrz_to_dict(mrz_data))
