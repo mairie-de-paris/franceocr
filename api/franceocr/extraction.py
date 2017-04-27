@@ -4,9 +4,9 @@ import imutils
 import math
 import numpy as np
 
-from skimage.filters import threshold_local, threshold_otsu
+from skimage.filters import threshold_local, threshold_minimum, threshold_otsu
 from skimage.morphology import *
-from skimage.restoration import denoise_bilateral
+from skimage.exposure import *
 from .transform import four_point_transform
 
 def edge_detect(channel):
@@ -88,28 +88,40 @@ def improve_image(image):
     # to give it that 'black and white' paper effect
     image = imutils.resize(image, height = 650)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    thresh = threshold_local(image, 51, offset=13)
-    image = image > thresh
 
-    cv2.imshow("Threshold", image.astype("uint8") * 255)
+    # initialize a rectangular and square structuring kernel
+    rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (21, 5))
 
-    # image = 1 - image
-    # image = skeletonize(image)
-    # image = binary_closing(image)
+    # smooth the image using a 3x3 Gaussian, then apply the blackhat
+    # morphological operator to find dark regions on a light background
+    image = cv2.GaussianBlur(image, (3, 3), 0)
+    image = cv2.morphologyEx(image, cv2.MORPH_BLACKHAT, rectKernel)
+
+    # cv2.imshow("Blackhat", image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+    image = equalize_adapthist(image)
+    image = adjust_sigmoid(image, cutoff=0.5, gain=7) * 255
+    image = image.astype("uint8")
+    image = cv2.bitwise_not(image)
+
+    # Courbe pour effacer les détails
+    image[image <= 50] = 50
+    image[image >= 220] = 220
+    image = (image - 50) / 170 * 255
+    image = image.astype("uint8")
+
+    # cv2.imshow("Filter", image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+    # thresh = threshold_local(image, 35, offset=10)
+    # # thresh = threshold_minimum(image)
+    # image = image > thresh
     # image = image.astype("uint8") * 255
-    # image = binary_dilation(image)
-    # image = binary_erosion(image)
-    pepper = black_tophat(image)
-    pepper[:120, :] = 0
-    image[pepper] = 1
-    image = image.astype("uint8") * 255
-
-    # erodeKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 1))
-    # image = cv2.erode(image, erodeKernel, iterations=1)
-    # erodeKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 2))
-    # image = cv2.erode(image, erodeKernel, iterations=1)
-    # erodeKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 1))
-    # image = cv2.erode(image, erodeKernel, iterations=4)
+    #
+    # cv2.imshow("Threshold", image)
 
     cv2.imshow("Improved", image)
     cv2.waitKey(0)
@@ -178,13 +190,3 @@ def remove_blur(image):
     cv2.destroyAllWindows()
 
     return output
-
-if __name__ == "__main__":
-    image = cv2.imread("../static/img/louis2.jpg")
-    document = extract_document(image)
-    # remove_blur(document)
-    angle = compute_skew(document)
-    document = deskew_image(document, angle)
-    cv2.imwrite("../static/img/extracted.jpg", document)
-    document = improve_image(document)
-    cv2.imwrite("../static/img/improved.jpg", document)
