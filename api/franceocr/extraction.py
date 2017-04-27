@@ -37,9 +37,9 @@ def find_significant_contours(image, edge_image):
     return [x[0] for x in significant]
 
 def extract_document(image):
-    ratio = image.shape[0] / 500.0
+    ratio = image.shape[0] / 650
     orig = image.copy()
-    image = imutils.resize(image, height = 500)
+    image = imutils.resize(image, height=650)
 
     blurred = cv2.GaussianBlur(image, (5, 5), 0)
     edged = np.max( np.array([ edge_detect(blurred[:,:, 0]), edge_detect(blurred[:,:, 1]), edge_detect(blurred[:,:, 2]) ]), axis=0 )
@@ -76,8 +76,8 @@ def extract_document(image):
 
     # show the original and scanned images
     print("STEP 3: Apply perspective transform")
-    cv2.imshow("Original", imutils.resize(orig, height = 650))
-    cv2.imshow("Scanned", imutils.resize(warped, height = 650))
+    cv2.imshow("Original", imutils.resize(orig, height=500))
+    cv2.imshow("Scanned", imutils.resize(warped, height=500))
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
@@ -86,7 +86,7 @@ def extract_document(image):
 def improve_image(image):
     # convert the image to grayscale, then threshold it
     # to give it that 'black and white' paper effect
-    image = imutils.resize(image, height = 650)
+    image = imutils.resize(image, height=650)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # initialize a rectangular and square structuring kernel
@@ -130,7 +130,7 @@ def improve_image(image):
     return image
 
 def compute_skew(image):
-    image = imutils.resize(image, height = 500)
+    image = imutils.resize(image, height=650)
     orig = image.copy()
 
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -174,19 +174,59 @@ def deskew_image(image, angle):
     width = image.shape[1]
     rotated = cv2.warpAffine(image, rot_mat, (width, height), flags=cv2.INTER_CUBIC)
 
-    cv2.imshow("Rotated", imutils.resize(rotated, height = 500))
+    cv2.imshow("Rotated", imutils.resize(rotated, height=500))
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
     return rotated
 
 def remove_blur(image):
-    cv2.imshow('Original', imutils.resize(image, height = 500))
+    cv2.imshow('Original', imutils.resize(image, height=500))
 
     output = denoise_bilateral(imutils.resize(image, height = 200), sigma_color=0.05, sigma_spatial=15)
 
-    cv2.imshow("Unblurred", imutils.resize(output, height = 500))
+    cv2.imshow("Unblurred", imutils.resize(output, height=500))
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
     return output
+
+def detect_text(image):
+    image = imutils.resize(image, height=650)
+    if len(image.shape) == 3  and image.shape[2] == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    sobel = cv2.Sobel(image, ddepth=cv2.CV_8U, dx=1, dy=0, ksize=3, scale=1, delta=0, borderType=cv2.BORDER_DEFAULT)
+    thresh = cv2.threshold(sobel, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+
+    cv2.imshow("Thresh", sobel)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    closingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (20, 5))
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, closingKernel)
+    thresh = cv2.erode(thresh, None, iterations=2)
+
+    cv2.imshow("Thresh", thresh)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    contours = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
+    print(contours)
+
+    zones = []
+    for contour in contours:
+        if len(contour) > 0:
+            contour = cv2.approxPolyDP(contour, 3, True)
+            appRect = cv2.boundingRect(contour)
+            x, y, w, h = appRect
+
+            if w > h:
+                zones.append(appRect)
+                cv2.rectangle(image, (x, y), (x + w, y + h), 0)
+
+    cv2.imshow("Zones", image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    return zones
