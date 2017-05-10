@@ -7,6 +7,4 @@ load_fixed_length_dawgs F
 load_bigram_dawg F
 wordrec_enable_assoc F
 tessedit_char_whitelist 0123456789.
-language_model_penalty_non_freq_dict_word 10
-language_model_penalty_non_dict_word 10
-user_patterns_file patterns/cni-birthday
+user_patterns_file patterns/cni-birth_date

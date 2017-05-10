@@ -25,8 +25,6 @@ def checksum_mrz(string):
     return result % 10
 
 def extract_mrz(image):
-    # initialize a rectangular and square structuring kernel
-
     # resize the image, and convert it to grayscale
     image = imutils.resize(image, height=650)
     if len(image.shape) == 3  and image.shape[2] == 3:

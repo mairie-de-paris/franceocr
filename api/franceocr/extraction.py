@@ -36,10 +36,10 @@ def find_significant_contours(image, edge_image):
     #print ([x[1] for x in significant])
     return [x[0] for x in significant]
 
-def extract_document(image):
-    ratio = image.shape[0] / 650
+def extract_document(image, image_height=650):
+    ratio = image.shape[0] / image_height
     orig = image.copy()
-    image = imutils.resize(image, height=650)
+    image = imutils.resize(image, height=image_height)
 
     blurred = cv2.GaussianBlur(image, (5, 5), 0)
     edged = np.max( np.array([ edge_detect(blurred[:,:, 0]), edge_detect(blurred[:,:, 1]), edge_detect(blurred[:,:, 2]) ]), axis=0 )
@@ -87,6 +87,22 @@ def improve_image(image):
     # convert the image to grayscale, then threshold it
     # to give it that 'black and white' paper effect
     image = imutils.resize(image, height=650)
+
+    # no_red_zones = image[:,:,2] <= 100
+    # image[no_red_zones] = 255
+    # image[~no_red_zones] = 0
+    #
+    # # To grayscale
+    # image = np.amax(image, axis=2)
+    # image = (image == 255) * 255
+    # image = image.astype("uint8")
+    #
+    # cv2.imshow("Improved", image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    #
+    # return image
+
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # initialize a rectangular and square structuring kernel
@@ -97,14 +113,18 @@ def improve_image(image):
     image = cv2.GaussianBlur(image, (3, 3), 0)
     image = cv2.morphologyEx(image, cv2.MORPH_BLACKHAT, rectKernel)
 
-    # cv2.imshow("Blackhat", image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    cv2.imshow("Blackhat", image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     image = equalize_adapthist(image)
     image = adjust_sigmoid(image, cutoff=0.5, gain=7) * 255
     image = image.astype("uint8")
     image = cv2.bitwise_not(image)
+
+    cv2.imshow("Filter", image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     # Courbe pour effacer les détails
     image[image <= 50] = 50
@@ -112,9 +132,9 @@ def improve_image(image):
     image = (image - 50) / 170 * 255
     image = image.astype("uint8")
 
-    # cv2.imshow("Filter", image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    cv2.imshow("Levels", image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     # thresh = threshold_local(image, 35, offset=10)
     # # thresh = threshold_minimum(image)
@@ -122,10 +142,6 @@ def improve_image(image):
     # image = image.astype("uint8") * 255
     #
     # cv2.imshow("Threshold", image)
-
-    cv2.imshow("Improved", image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
 
     return image
 
@@ -192,20 +208,28 @@ def remove_blur(image):
     return output
 
 def detect_text(image):
+    # resize the image, and convert it to grayscale
     image = imutils.resize(image, height=650)
     if len(image.shape) == 3  and image.shape[2] == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    sobel = cv2.Sobel(image, ddepth=cv2.CV_8U, dx=1, dy=0, ksize=3, scale=1, delta=0, borderType=cv2.BORDER_DEFAULT)
-    thresh = cv2.threshold(sobel, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    # smooth the image using a 3x3 Gaussian, then apply the blackhat
+    # morphological operator to find dark regions on a light background
+    image = cv2.GaussianBlur(image, (3, 3), 0)
+    blackhatKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (18, 8))
+    blackhat = cv2.morphologyEx(image, cv2.MORPH_BLACKHAT, blackhatKernel)
 
-    cv2.imshow("Thresh", sobel)
+    cv2.imshow("Blackhat", blackhat)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-    closingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (20, 5))
-    thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, closingKernel)
-    thresh = cv2.erode(thresh, None, iterations=2)
+    closingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 7))
+    thresh = cv2.morphologyEx(blackhat, cv2.MORPH_CLOSE, closingKernel)
+    # thresh = cv2.erode(thresh, None, iterations=3)
+
+    # closingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 7))
+    # thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, closingKernel)
+    thresh = cv2.threshold(thresh, 127, 255, cv2.THRESH_BINARY)[1]
 
     cv2.imshow("Thresh", thresh)
     cv2.waitKey(0)
@@ -216,14 +240,19 @@ def detect_text(image):
 
     zones = []
     for contour in contours:
-        if len(contour) > 0:
-            contour = cv2.approxPolyDP(contour, 3, True)
-            appRect = cv2.boundingRect(contour)
-            x, y, w, h = appRect
+        contour = cv2.approxPolyDP(contour, 3, True)
+        appRect = cv2.boundingRect(contour)
+        x, y, w, h = appRect
 
-            if w > h:
-                zones.append(appRect)
-                cv2.rectangle(image, (x, y), (x + w, y + h), 0)
+        pX = 5
+        pY = 5
+        (x, y) = (x - pX, y - pY)
+        (w, h) = (w + (pX * 2), h + (pY * 2))
+
+        if w / h >= 3 and cv2.contourArea(contour) > 500:
+            print(cv2.contourArea(contour))
+            zones.append(appRect)
+            cv2.rectangle(image, (x, y), (x + w, y + h), 0)
 
     cv2.imshow("Zones", image)
     cv2.waitKey(0)

@@ -1,43 +1,70 @@
 import cv2
 import imutils
+import franceocr
 import numpy as np
 import os.path
 
 import matplotlib.pyplot as plt
 from skimage.feature import match_template
 
-def cni_locate_zones(image):
+def cni_locate_zones(image, improved):
     image = imutils.resize(image, height=650)
     if len(image.shape) == 3  and image.shape[2] == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    template = cv2.imread(os.path.dirname(__file__) + "/../templates/cni.png", 0)
-    templateH, templateW = template.shape
-
-    result = match_template(image, template)
-    result = result[:200, :200]
-    ij = np.unravel_index(np.argmax(result), result.shape)
-    x, y = ij[::-1]
-
-    top_left = (x, y)
-    bottom_right = (top_left[0] + templateW, top_left[1] + templateH)
-
-    cv2.rectangle(image, top_left, bottom_right, 255, 2)
-    top_left = (x - 7, y - 14)
+    improved = imutils.resize(improved, height=650)
+    if len(improved.shape) == 3  and improved.shape[2] == 3:
+        improved = cv2.cvtColor(improved, cv2.COLOR_BGR2GRAY)
 
     zones = {
-        "card_number": (top_left[1] + 63, top_left[0] + 345, 35, 210),
-        "last_name": (top_left[1] + 98, top_left[0] + 306, 42, 461),
-        "first_name": (top_left[1] + 168, top_left[0] + 345, 37, 422),
-        "sex": (top_left[1] + 229, top_left[0] + 306, 34, 39),
-        "birth_date": (top_left[1] + 229, top_left[0] + 553, 34, 214),
-        "birth_place": (top_left[1] + 263, top_left[0] + 276, 34, 491),
+        "last_name": {
+            "width": 500,
+            "height": 35,
+            "offset_x": 0,
+            "offset_y": -4,
+        },
+        "first_name": {
+            "width": 500,
+            "height": 35,
+            "offset_x": 0,
+            "offset_y": 0,
+        },
+        "birth_date": {
+            "width": 180,
+            "height": 35,
+            "offset_x": 0,
+            "offset_y": -3,
+        },
+        "birth_place": {
+            "width": 500,
+            "height": 35,
+            "offset_x": 0,
+            "offset_y": 30,
+        },
     }
 
     for zone in zones:
-        y, x, h, w = zones[zone]
-        cv2.rectangle(image, (x, y), (x + w, y + h), 255, 2)
+        template = cv2.imread(os.path.dirname(__file__) + "/../templates/cni-" + zone + ".png", 0)
+        templateH, templateW = template.shape
 
-    cv2.imshow("Matched", image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+        result = match_template(image, template)
+        ij = np.unravel_index(np.argmax(result), result.shape)
+        x, y = ij[::-1]
+
+        bbox = (
+            x + templateW + zones[zone]["offset_x"],
+            y + zones[zone]["offset_y"],
+            zones[zone]["width"],
+            zones[zone]["height"]
+        )
+
+        # cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[0] + bbox[2], bbox[1] + bbox[3]), 255, 1)
+
+        zones[zone]["bbox"] = bbox
+        zones[zone]["image"] = improved[bbox[1]:bbox[1] + bbox[3], bbox[0]:bbox[0] + bbox[2]]
+
+    # cv2.imshow("Matched", image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+    return zones
