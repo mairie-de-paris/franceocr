@@ -1,1 +1,4 @@
 IMAGE_HEIGHT = 1000
+
+DEBUG = True
+INFO = True

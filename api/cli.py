@@ -12,3 +12,4 @@ if __name__ == "__main__":
     sys.stdout.write("-----------------BEGIN-----------------\n")
     sys.stdout.write(pytesseract.image_to_string(image) + "\n")
     sys.stdout.write("------------------END------------------\n")
+    # TODO batch processing

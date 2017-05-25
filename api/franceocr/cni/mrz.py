@@ -1,14 +1,26 @@
 import cv2
 import imutils
+import logging
 import numpy as np
 import pytesseract
 
+from skimage.filters import threshold_local
+
+from franceocr.cni.exceptions import (
+    InvalidChecksumException, InvalidMRZException
+)
+from franceocr.exceptions import InvalidOCRException
 from franceocr.extraction import find_significant_contours
 from franceocr.ocr import ocr_cni_mrz
-from skimage.filters import threshold_local
+from franceocr.utils import DEBUG_display_image
 
 
 def checksum_mrz(string):
+    """Compute the checksum of a substring of the MRZ.
+
+    Source: https://fr.wikipedia.org/wiki/Carte_nationale_d%27identit%C3%A9_en_France#Codage_Bande_MRZ_.28lecture_optique.29
+    """
+
     factors = [7, 3, 1]
     result = 0
     for index, c in enumerate(string):
@@ -17,17 +29,22 @@ def checksum_mrz(string):
         elif '0' <= c <= '9':
             val = int(c)
         elif 'A' <= c <= 'Z':
-            val = ord(c) - 55;
+            val = ord(c) - 55
         else:
             raise ValueError
         result += val * factors[index % 3]
 
     return result % 10
 
+
 def extract_mrz(image):
+    """Find and exctract the MRZ region from a CNI image.
+
+    FIXME comments
+    """
     # resize the image, and convert it to grayscale
     image = imutils.resize(image, height=650)
-    if len(image.shape) == 3  and image.shape[2] == 3:
+    if len(image.shape) == 3 and image.shape[2] == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # smooth the image using a 3x3 Gaussian, then apply the blackhat
@@ -36,9 +53,7 @@ def extract_mrz(image):
     blackhatKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (18, 8))
     blackhat = cv2.morphologyEx(image, cv2.MORPH_BLACKHAT, blackhatKernel)
 
-    cv2.imshow("Blackhat", blackhat)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    DEBUG_display_image(blackhat, "Blackhat")
 
     # compute the Scharr gradient of the blackhat image and scale the
     # result into the range [0, 255]
@@ -47,9 +62,7 @@ def extract_mrz(image):
     (minVal, maxVal) = (np.min(gradX), np.max(gradX))
     gradX = (255 * ((gradX - minVal) / (maxVal - minVal))).astype("uint8")
 
-    cv2.imshow("GradX", gradX)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    DEBUG_display_image(gradX, "GradX")
 
     # apply a closing operation using the rectangular kernel to close
     # gaps in between letters -- then apply Otsu's thresholding method
@@ -57,9 +70,7 @@ def extract_mrz(image):
     thresh = cv2.morphologyEx(gradX, cv2.MORPH_CLOSE, closingKernel)
     thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
-    cv2.imshow("Before", thresh)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    DEBUG_display_image(thresh, "Before")
 
     # perform another closing operation, this time using the square
     # kernel to close gaps between lines of the MRZ, then perform a
@@ -70,9 +81,7 @@ def extract_mrz(image):
     erodeKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (4, 4))
     thresh = cv2.erode(thresh, erodeKernel, iterations=4)
 
-    cv2.imshow("After", thresh)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    DEBUG_display_image(thresh, "After")
 
     # during thresholding, it's possible that border pixels were
     # included in the thresholding, so let's set 5% of the left and
@@ -81,10 +90,7 @@ def extract_mrz(image):
     thresh[:, 0:p] = 0
     thresh[:, image.shape[1] - p:] = 0
 
-    # find contours in the thresholded image and sort them by their
-    # size
-    contours = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
-    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+    contours = find_significant_contours(thresh)
 
     # loop over the contours
     for contour in contours:
@@ -101,7 +107,7 @@ def extract_mrz(image):
         ar = w / h
         crWidth = w / image.shape[1]
 
-        print(ar, crWidth)
+        logging.debug(ar, crWidth)
 
         # check to see if the aspect ratio and coverage width are within
         # acceptable criteria
@@ -119,39 +125,64 @@ def extract_mrz(image):
             cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
             # break
 
-    cv2.imshow("Image", image)
-    cv2.waitKey(0)
+    DEBUG_display_image(image)
 
     # Further improve MRZ image quality
-    thresh = threshold_local(mrz_image, 27, offset = 11)
+    thresh = threshold_local(mrz_image, 27, offset=11)
     mrz_image = mrz_image > thresh
     mrz_image = mrz_image.astype("uint8") * 255
 
-    # show the output images
-    cv2.imshow("ROI", mrz_image)
-    cv2.imwrite("mrz_image.jpg", mrz_image)
-    cv2.waitKey(0)
+    DEBUG_display_image(mrz_image, "MRZ", resize=False)
 
     return mrz_image
 
+
 def read_mrz(image):
+    """Read the extracted MRZ image to a list of two 36-chars strings."""
+
     mrz_data = ocr_cni_mrz(image)
     mrz_data = mrz_data.replace(' ', '')
     mrz_data = mrz_data.split('\n')
 
-    print(mrz_data)
+    logging.debug(mrz_data)
 
-    assert(len(mrz_data) == 2)
-    assert(len(mrz_data[0]) == 36)
-    assert(len(mrz_data[1]) == 36)
+    if len(mrz_data) != 2:
+        raise InvalidOCRException(
+            "Expected 2 lines, got {}".format(len(mrz_data))
+        )
+
+    if len(mrz_data[0]) != 36:
+        raise InvalidOCRException(
+            "Expected line 0 to be 36-chars long, is {}".format(len(mrz_data[0]))
+        )
+
+    if len(mrz_data[1]) != 36:
+        raise InvalidOCRException(
+            "Expected line 1 to be 36-chars long, is {}".format(len(mrz_data[1]))
+        )
 
     return mrz_data
 
-def mrz_to_dict(mrz):
-    line1, line2 = mrz
 
-    assert(len(line1) == 36)
-    assert(len(line2) == 36)
+def mrz_to_dict(mrz_data):
+    """Extract human-readable data from the MRZ strings."""
+
+    if len(mrz_data) != 2:
+        raise InvalidMRZException(
+            "Expected 2 lines, got {}".format(len(mrz_data))
+        )
+
+    if len(mrz_data[0]) != 36:
+        raise InvalidMRZException(
+            "Expected line 0 to be 36-chars long, is {}".format(len(mrz_data[0]))
+        )
+
+    if len(mrz_data[1]) != 36:
+        raise InvalidMRZException(
+            "Expected line 1 to be 36-chars long, is {}".format(len(mrz_data[1]))
+        )
+
+    line1, line2 = mrz_data
 
     values = {
         "id": line1[0:2],
@@ -172,10 +203,25 @@ def mrz_to_dict(mrz):
         "checksum": line2[35],
     }
 
-    assert(values["id"] == "ID")
+    if values["id"] != "ID":
+        raise InvalidMRZException(
+            "Expected id to be ID, got {}".format(values["id"])
+        )
+
     # assert(values["adm_code2"] == values["adm_code"][0:3])
-    assert(checksum_mrz(line2[0:12]) == int(values["checksum_emit"]))
-    assert(checksum_mrz(line2[27:33]) == int(values["checksum_birth"]))
-    assert(checksum_mrz(line1 + line2[:-1]) == int(values["checksum"]))
+
+    # FIXME protect against type-cast exception
+    if checksum_mrz(line2[0:12]) != int(values["checksum_emit"]):
+        raise InvalidChecksumException(
+            "Invalid emit checksum"
+        )
+    if checksum_mrz(line2[27:33]) != int(values["checksum_birth"]):
+        raise InvalidChecksumException(
+            "Invalid birth_date checksum"
+        )
+    if checksum_mrz(line1 + line2[:-1]) != int(values["checksum"]):
+        raise InvalidChecksumException(
+            "Invalid global checksum"
+        )
 
     return values
