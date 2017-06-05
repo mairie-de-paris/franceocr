@@ -13,7 +13,7 @@ from skimage.restoration import denoise_bilateral
 from imutils.perspective import four_point_transform
 
 from franceocr.constants import DEBUG, IMAGE_HEIGHT
-from franceocr.utils import DEBUG_display_image, INFO_display_image
+from franceocr.utils import DEBUG_display_image, DEBUG_print, INFO_display_image
 
 
 def edge_detect(channel):
@@ -187,17 +187,19 @@ def compute_skew(image):
     )
 
     image_angle = 0
-    for line in lines:
-        x1, y1, x2, y2 = line[0]
-        angle = math.atan2(y2 - y1, x2 - x1) / np.pi * 180
-        logging.debug(angle)
-        if abs(angle) < 15:
-            cv2.line(orig, (x1, y1), (x2, y2), (255, 0, 0))
-            image_angle += angle
+    if lines is not None:
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            angle = math.atan2(y2 - y1, x2 - x1) / np.pi * 180
+            logging.debug(angle)
+            if abs(angle) < 15:
+                cv2.line(orig, (x1, y1), (x2, y2), (255, 0, 0))
+                image_angle += angle
 
-    # Mean image angle in degrees
-    image_angle /= len(lines)
+        # Mean image angle in degrees
+        image_angle /= len(lines)
 
+    DEBUG_print("Document angle: {}".format(image_angle))
     INFO_display_image(orig, "Lines")
 
     return angle

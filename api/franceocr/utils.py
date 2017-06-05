@@ -27,3 +27,9 @@ def INFO_display_image(image, window_name="Image", alone=True, resize=400):
         return
 
     display_image(image, window_name, alone, resize)
+
+def DEBUG_print(message):
+    if not DEBUG:
+        return
+
+    print(message)

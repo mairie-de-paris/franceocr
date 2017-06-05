@@ -13,7 +13,7 @@ from franceocr.cni.exceptions import (
 from franceocr.exceptions import InvalidOCRException
 from franceocr.extraction import find_significant_contours
 from franceocr.ocr import ocr_cni_mrz
-from franceocr.utils import DEBUG_display_image
+from franceocr.utils import DEBUG_display_image, DEBUG_print
 
 
 def checksum_mrz(string):
@@ -184,6 +184,8 @@ def mrz_to_dict(mrz_data):
         )
 
     line1, line2 = mrz_data
+
+    DEBUG_print("MRZ data: {}".format(mrz_data))
 
     values = {
         "id": line1[0:2],
