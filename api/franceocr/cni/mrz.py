@@ -6,6 +6,7 @@ import pytesseract
 
 from skimage.filters import threshold_local
 
+from franceocr.constants import IMAGE_HEIGHT
 from franceocr.cni.exceptions import (
     InvalidChecksumException, InvalidMRZException
 )
@@ -43,7 +44,7 @@ def extract_mrz(image):
     FIXME comments
     """
     # resize the image, and convert it to grayscale
-    image = imutils.resize(image, height=650)
+    image = imutils.resize(image, height=IMAGE_HEIGHT)
     if len(image.shape) == 3 and image.shape[2] == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 

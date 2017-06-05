@@ -51,9 +51,9 @@ def find_significant_contours(edged_image, ratio=0.05):
 
 
 def extract_document(image):
-    ratio = image.shape[0] / 650
+    ratio = image.shape[0] / IMAGE_HEIGHT
     orig = image.copy()
-    image = imutils.resize(image, height=650)
+    image = imutils.resize(image, height=IMAGE_HEIGHT)
 
     blurred = cv2.GaussianBlur(image, (5, 5), 0)
     edged = np.max(np.array([
@@ -94,7 +94,7 @@ def extract_document(image):
 
 
 def improve_image(image):
-    image = imutils.resize(image, height=650)
+    image = imutils.resize(image, height=IMAGE_HEIGHT)
 
     # no_red_zones = image[:,:,2] <= 100
     # image[no_red_zones] = 255
@@ -150,7 +150,7 @@ def compute_skew(image):
     Works by finding strong lines in the image and
     FIXME improve accuracy ?
     """
-    image = imutils.resize(image, height=650)
+    image = imutils.resize(image, height=IMAGE_HEIGHT)
     orig = image.copy()
 
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -251,7 +251,7 @@ def detect_text(image):
     Not used in the pipeline.
     """
     # resize the image, and convert it to grayscale
-    image = imutils.resize(image, height=650)
+    image = imutils.resize(image, height=IMAGE_HEIGHT)
     if len(image.shape) == 3 and image.shape[2] == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 

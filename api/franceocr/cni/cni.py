@@ -7,6 +7,7 @@ import os.path
 import matplotlib.pyplot as plt
 from skimage.feature import match_template
 
+from franceocr.constants import IMAGE_HEIGHT
 from franceocr.extraction import find_significant_contours
 from franceocr.utils import DEBUG_display_image
 
@@ -17,11 +18,11 @@ def cni_locate_zones(image, improved):
     Requires both the original image and the improved image.
     """
 
-    image = imutils.resize(image, height=650)
+    image = imutils.resize(image, height=IMAGE_HEIGHT)
     if len(image.shape) == 3 and image.shape[2] == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    improved = imutils.resize(improved, height=650)
+    improved = imutils.resize(improved, height=IMAGE_HEIGHT)
     if len(improved.shape) == 3 and improved.shape[2] == 3:
         improved = cv2.cvtColor(improved, cv2.COLOR_BGR2GRAY)
 
