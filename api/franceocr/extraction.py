@@ -51,46 +51,79 @@ def find_significant_contours(edged_image, ratio=0.05):
 
 
 def extract_document(image):
-    ratio = image.shape[0] / IMAGE_HEIGHT
     orig = image.copy()
+    ratio = image.shape[0] / IMAGE_HEIGHT
+
     image = imutils.resize(image, height=IMAGE_HEIGHT)
 
-    blurred = cv2.GaussianBlur(image, (5, 5), 0)
-    edged = np.max(np.array([
-        edge_detect(blurred[:, :, 0]),
-        edge_detect(blurred[:, :, 1]),
-        edge_detect(blurred[:, :, 2])
-    ]), axis=0)
-    mean = np.mean(edged)
-    # Zero any value that is less than mean. This reduces a lot of noise.
-    edged[edged <= mean] = 0
+    # === Beginning of the first pass of the extraction === #
+
+    image_blue = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    lower_blue = np.array([210 / 2, 60, 50])
+    upper_blue = np.array([230 / 2, 255, 255])
+    image_blue = cv2.inRange(image_blue, lower_blue, upper_blue)
+
+    blurred = cv2.blur(image_blue, (3, 3))
 
     DEBUG_display_image(image, "Image", alone=False)
-    DEBUG_display_image(edged, "Edged")
-
-    edged_8u = np.asarray(edged, np.uint8)
+    DEBUG_display_image(blurred, "Edged")
 
     # Find contours
-    significant = find_significant_contours(edged_8u)
+    significant = find_significant_contours(blurred, ratio=0.01)
 
     contour = significant[0]
-    # epsilon = 0.10 * cv2.arcLength(contour,True)
-    # contour = cv2.approxPolyDP(contour, epsilon, True)
     contour = cv2.boxPoints(cv2.minAreaRect(contour))
+
+    HEADER_TO_BODY = 1400 / 125
+    contour[0] = contour[1] + HEADER_TO_BODY * (contour[0] - contour[1])
+    contour[3] = contour[2] + HEADER_TO_BODY * (contour[3] - contour[2])
     contour = np.int0(contour)
 
-    if DEBUG:
-        cv2.drawContours(image, [contour], -1, (255, 0, 0), 2)
-        DEBUG_display_image(image, "Outline")
+    image = four_point_transform(image, contour.reshape(4, 2))
+    output = four_point_transform(orig, contour.reshape(4, 2) * ratio)
 
-    # apply the four point transform to obtain a top-down
-    # view of the original image
-    warped = four_point_transform(orig, contour.reshape(4, 2) * ratio)
+    # === End of the first pass of the extraction === #
+    # === Deskewing === #
+
+    # FIXME pertinent ?
+    # angle = compute_skew(image)
+    # image = deskew_image(image, angle)
+    # output = deskew_image(output, angle)
+
+    # === End of deskewing === #
+    # === Beginning of the second pass of the extraction === #
+    # ==== Remove additionnal space below the document ==== #
+
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    edged = edge_detect(image)
+    edged = np.asarray(edged, np.uint8)
+
+    totals = np.sum(edged, axis=1)
+    totals_threshold = 0.7 * np.max(totals)
+    totals[totals <= totals_threshold] = 0
+
+    # First line from the 2/3s
+    yMin = int(edged.shape[0] * 9 / 10)
+    for y0 in range(yMin, edged.shape[0]):
+        if totals[y0]:
+            break
+
+    # Safeguard: don't cut the image if not necessary
+    if y0 == yMin:
+        y0 = edged.shape[0]
+
+    cv2.line(edged, (0, y0), (1000, y0), (255, 255, 255), 3)
+
+    DEBUG_display_image(edged, "Image")
+
+    output = output[:int(y0 * ratio), :]
+
+    # === End of the second pass of the extraction === #
 
     INFO_display_image(orig, "Original", alone=False)
-    INFO_display_image(warped, "Scanned")
+    INFO_display_image(output, "Scanned")
 
-    return warped
+    return output
 
 
 def improve_image(image):
@@ -157,28 +190,28 @@ def compute_skew(image):
 
     DEBUG_display_image(image, "Gray", alone=False)
 
-    blurred = cv2.GaussianBlur(image, (5, 5), 0)
+    blurred = cv2.blur(image, (3, 3))
     canny_threshold = 50
-    edges = cv2.Canny(
+    edged = cv2.Canny(
         blurred,
         canny_threshold,
         canny_threshold * 3,
         apertureSize=3
     )
 
-    DEBUG_display_image(edges, "Edges", alone=False)
+    DEBUG_display_image(edged, "Edges", alone=False)
 
     # FIXME remove useless
     # image = cv2.bitwise_not(image, image)
     # DEBUG_display_image(image, "BW", alone=False)
 
     rho_step = 1
-    theta_step = np.pi / 180
+    theta_step = 1 * np.pi / 180
     threshold = 100
     min_line_length = image.shape[1] * 0.6
     max_line_gap = 20
     lines = cv2.HoughLinesP(
-        edges,
+        edged,
         rho_step,
         theta_step,
         threshold,
