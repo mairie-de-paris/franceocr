@@ -7,8 +7,9 @@ import numpy as np
 
 from operator import itemgetter
 
-from skimage.filters import threshold_local, threshold_minimum
-from skimage.exposure import adjust_sigmoid, equalize_adapthist
+from skimage.filters import threshold_local
+from skimage.exposure import adjust_sigmoid, equalize_adapthist, equalize_hist
+from skimage.morphology import binary_closing, closing
 from skimage.restoration import denoise_bilateral
 from imutils.perspective import four_point_transform
 
@@ -58,12 +59,12 @@ def extract_document(image):
 
     # === Beginning of the first pass of the extraction === #
 
-    image_blue = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     lower_blue = np.array([210 / 2, 60, 50])
     upper_blue = np.array([230 / 2, 255, 255])
-    image_blue = cv2.inRange(image_blue, lower_blue, upper_blue)
+    image_blue = cv2.inRange(image_hsv, lower_blue, upper_blue)
 
-    blurred = cv2.blur(image_blue, (3, 3))
+    blurred = cv2.GaussianBlur(image_blue, (3, 3), 0)
 
     DEBUG_display_image(image, "Image", alone=False)
     DEBUG_display_image(blurred, "Edged")
@@ -86,9 +87,9 @@ def extract_document(image):
     # === Deskewing === #
 
     # FIXME pertinent ?
-    # angle = compute_skew(image)
-    # image = deskew_image(image, angle)
-    # output = deskew_image(output, angle)
+    angle = compute_skew(image)
+    image = deskew_image(image, angle)
+    output = deskew_image(output, angle)
 
     # === End of deskewing === #
     # === Beginning of the second pass of the extraction === #
@@ -102,7 +103,7 @@ def extract_document(image):
     totals_threshold = 0.7 * np.max(totals)
     totals[totals <= totals_threshold] = 0
 
-    # First line from the 2/3s
+    # First line from the 9/10s
     yMin = int(edged.shape[0] * 9 / 10)
     for y0 in range(yMin, edged.shape[0]):
         if totals[y0]:
@@ -152,27 +153,37 @@ def improve_image(image):
     DEBUG_display_image(image, "Blackhat")
 
     # FIXME comment
-    image = equalize_adapthist(image)
-    image = adjust_sigmoid(image, cutoff=0.5, gain=7) * 255
-    image = image.astype("uint8")
+    image = equalize_hist(image)
+    # image = adjust_sigmoid(image, cutoff=0.5, gain=7)
+    image = (image * 255).astype("uint8")
     image = cv2.bitwise_not(image)
 
-    DEBUG_display_image(image, "Filter")
+    DEBUG_display_image(image, "Filter1")
 
     # Courbe pour effacer les détails
-    image[image <= 50] = 50
-    image[image >= 220] = 220
-    image = (image - 50) / 170 * 255
+    min_level = 10
+    max_level = 30
+    image[image <= min_level] = min_level
+    image[image >= max_level] = max_level
+    image = (image - min_level) / (max_level - min_level) * 255
     image = image.astype("uint8")
 
-    DEBUG_display_image(image, "Filter")
+    DEBUG_display_image(image, "Filter2")
 
-    # thresh = threshold_local(image, 35, offset=10)
-    # # thresh = threshold_minimum(image)
+    # image = adjust_sigmoid(image, cutoff=0.5, gain=7)
+    # image = cv2.bitwise_not(image)
+    # image = (image * 255).astype("uint8")
+    # DEBUG_display_image(image, "Filter3")
+
+    # image = ~image
+    #
+    # thresh = threshold_niblack(image)
     # image = image > thresh
     # image = image.astype("uint8") * 255
-    #
-    # cv2.imshow("Threshold", image)
+
+    image = closing(image)
+
+    cv2.imshow("Threshold", image)
 
     return image
 
@@ -190,7 +201,7 @@ def compute_skew(image):
 
     DEBUG_display_image(image, "Gray", alone=False)
 
-    blurred = cv2.blur(image, (3, 3))
+    blurred = cv2.GaussianBlur(image, (3, 3), 0)
     canny_threshold = 50
     edged = cv2.Canny(
         blurred,
@@ -211,7 +222,7 @@ def compute_skew(image):
     min_line_length = image.shape[1] * 0.6
     max_line_gap = 20
     lines = cv2.HoughLinesP(
-        edged,
+        edged[300:, :],
         rho_step,
         theta_step,
         threshold,

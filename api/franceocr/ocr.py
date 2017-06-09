@@ -15,7 +15,7 @@ def ocr(image, lang="fra", config=None):
 def ocr_cni(image):
     ocr_result = ocr(
         image,
-        "fra",
+        "eng",
         "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni"
     )
 
@@ -45,8 +45,7 @@ def ocr_cni_birth_place(image):
         r'\(.*\)',
         '',
         ocr_result
-    )
-    .strip()
+    ).strip()
 
 
 def ocr_cni_mrz(image):
