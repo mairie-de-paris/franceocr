@@ -1,7 +1,7 @@
 import cv2
 import imutils
 
-from franceocr.constants import DEBUG, INFO
+from franceocr.config import DEBUG, INFO
 
 
 def display_image(image, window_name="Image", alone=True, resize=400):

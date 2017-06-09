@@ -6,7 +6,7 @@ import pytesseract
 
 from skimage.filters import threshold_local
 
-from franceocr.constants import IMAGE_HEIGHT
+from franceocr.config import IMAGE_HEIGHT
 from franceocr.cni.exceptions import (
     InvalidChecksumException, InvalidMRZException
 )

@@ -12,7 +12,7 @@ from skimage.exposure import adjust_sigmoid, equalize_adapthist
 from skimage.restoration import denoise_bilateral
 from imutils.perspective import four_point_transform
 
-from franceocr.constants import DEBUG, IMAGE_HEIGHT
+from franceocr.config import DEBUG, IMAGE_HEIGHT
 from franceocr.utils import DEBUG_display_image, DEBUG_print, INFO_display_image
 
 

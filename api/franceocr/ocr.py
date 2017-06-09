@@ -1,6 +1,8 @@
 import os.path
 import pytesseract
+import re
 
+from franceocr.config import BASEDIR
 from PIL import Image, ImageFilter
 
 
@@ -11,16 +13,47 @@ def ocr(image, lang="fra", config=None):
 
 
 def ocr_cni(image):
-    return ocr(image, "fra", "--oem 2 --psm 7 " + os.path.dirname(__file__) + "/tessconfig/cni")
+    ocr_result = ocr(
+        image,
+        "fra",
+        "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni"
+    )
+
+    return ocr_result \
+        .lstrip(":") \
+        .strip()
 
 
 def ocr_cni_birth_date(image):
-    return ocr(image, "fra", "--oem 2 --psm 7 " + os.path.dirname(__file__) + "/tessconfig/cni-birth_date")
+    ocr_result = ocr(
+        image,
+        "fra",
+        "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni-birth_date"
+    )
+
+    return ocr_result.replace(" ", "")
 
 
 def ocr_cni_birth_place(image):
-    return ocr(image, "fra", "--oem 2 --psm 7 " + os.path.dirname(__file__) + "/tessconfig/cni-birth_place")
+    ocr_result = ocr(
+        image,
+        "fra",
+        "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni-birth_place"
+    )
+
+    return re.sub(
+        r'\(.*\)',
+        '',
+        ocr_result
+    )
+    .strip()
 
 
 def ocr_cni_mrz(image):
-    return ocr(image, "fra", "--oem 2 " + os.path.dirname(__file__) + "/tessconfig/cni-mrz")
+    ocr_result = ocr(
+        image,
+        "OCRB",
+        "--oem 0 " + BASEDIR + "/tessconfig/cni-mrz"
+    )
+
+    return ocr_result

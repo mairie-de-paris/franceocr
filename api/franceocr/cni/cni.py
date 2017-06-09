@@ -7,7 +7,7 @@ import os.path
 import matplotlib.pyplot as plt
 from skimage.feature import match_template
 
-from franceocr.constants import IMAGE_HEIGHT
+from franceocr.config import IMAGE_HEIGHT
 from franceocr.extraction import find_significant_contours
 from franceocr.utils import DEBUG_display_image
 

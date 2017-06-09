@@ -1,4 +1,0 @@
-IMAGE_HEIGHT = 650
-
-DEBUG = True
-INFO = True
