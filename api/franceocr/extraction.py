@@ -75,6 +75,7 @@ def extract_document(image):
     contour = significant[0]
     contour = cv2.boxPoints(cv2.minAreaRect(contour))
 
+    # FIXME Buffer overflow
     HEADER_TO_BODY = 1400 / 125
     contour[0] = contour[1] + HEADER_TO_BODY * (contour[0] - contour[1])
     contour[3] = contour[2] + HEADER_TO_BODY * (contour[3] - contour[2])
@@ -82,6 +83,8 @@ def extract_document(image):
 
     image = four_point_transform(image, contour.reshape(4, 2))
     output = four_point_transform(orig, contour.reshape(4, 2) * ratio)
+
+    DEBUG_display_image(image, "Extracted")
 
     # === End of the first pass of the extraction === #
     # === Deskewing === #
@@ -141,22 +144,36 @@ def improve_image(image):
 
     # return image
 
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    # cv2.imwrite("hsv_h.jpg", image_hsv[:, :, 0])
+    # cv2.imwrite("hsv_s.jpg", image_hsv[:, :, 1])
+    # cv2.imwrite("hsv_v.jpg", image_hsv[:, :, 2])
+    #
+    # lower_orange = np.array([40 / 2, 0, 0])
+    # upper_orange = np.array([70 / 2, 30, 150])
+    # image_orange = cv2.inRange(image_hsv, lower_orange, upper_orange)
+    #
+    # INFO_display_image(image_orange, "Mask")
+    # INFO_display_image(image, "Before")
+    #
+    # image[image_orange == 255] = [255, 255, 255]
+    # INFO_display_image(image, "After")
 
-    rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (21, 5))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    image = cv2.GaussianBlur(image, (3, 3), 0)
+
 
     # smooth the image using a 3x3 Gaussian, then apply the blackhat
     # morphological operator to find dark regions on a light background
-    image = cv2.GaussianBlur(image, (3, 3), 0)
+    rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (21, 9))
     image = cv2.morphologyEx(image, cv2.MORPH_BLACKHAT, rectKernel)
+    image = cv2.bitwise_not(image)
 
     DEBUG_display_image(image, "Blackhat")
 
     # FIXME comment
     image = equalize_hist(image)
-    # image = adjust_sigmoid(image, cutoff=0.5, gain=7)
     image = (image * 255).astype("uint8")
-    image = cv2.bitwise_not(image)
 
     DEBUG_display_image(image, "Filter1")
 
@@ -170,20 +187,10 @@ def improve_image(image):
 
     DEBUG_display_image(image, "Filter2")
 
-    # image = adjust_sigmoid(image, cutoff=0.5, gain=7)
-    # image = cv2.bitwise_not(image)
-    # image = (image * 255).astype("uint8")
-    # DEBUG_display_image(image, "Filter3")
-
-    # image = ~image
-    #
-    # thresh = threshold_niblack(image)
-    # image = image > thresh
-    # image = image.astype("uint8") * 255
-
+    # Remove pepper
     image = closing(image)
 
-    cv2.imshow("Threshold", image)
+    INFO_display_image(image, "Threshold")
 
     return image
 
@@ -195,8 +202,6 @@ def compute_skew(image):
     FIXME improve accuracy ?
     """
     image = imutils.resize(image, height=IMAGE_HEIGHT)
-    orig = image.copy()
-
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     DEBUG_display_image(image, "Gray", alone=False)
@@ -237,16 +242,16 @@ def compute_skew(image):
             angle = math.atan2(y2 - y1, x2 - x1) / np.pi * 180
             logging.debug(angle)
             if abs(angle) < 15:
-                cv2.line(orig, (x1, y1), (x2, y2), (255, 0, 0))
+                cv2.line(image, (x1, y1), (x2, y2), (255, 0, 0))
                 image_angle += angle
 
         # Mean image angle in degrees
         image_angle /= len(lines)
 
     DEBUG_print("Document angle: {}".format(image_angle))
-    INFO_display_image(orig, "Lines")
+    DEBUG_display_image(image, "Lines")
 
-    return angle
+    return image_angle
 
 
 def deskew_image(image, angle):
@@ -268,7 +273,7 @@ def deskew_image(image, angle):
         flags=cv2.INTER_CUBIC
     )
 
-    INFO_display_image(rotated, "Rotated")
+    DEBUG_display_image(rotated, "Rotated")
 
     return rotated
 
@@ -285,8 +290,8 @@ def remove_blur(image):
         sigma_spatial=15
     )
 
-    INFO_display_image(image, "Original", alone=False)
-    INFO_display_image(output, "Deblurred")
+    DEBUG_display_image(image, "Original", alone=False)
+    DEBUG_display_image(output, "Deblurred")
 
     return output
 
