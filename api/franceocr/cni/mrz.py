@@ -51,7 +51,7 @@ def extract_mrz(image):
     # smooth the image using a 3x3 Gaussian, then apply the blackhat
     # morphological operator to find dark regions on a light background
     image = cv2.GaussianBlur(image, (3, 3), 0)
-    blackhatKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (18, 8))
+    blackhatKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (27, 12))
     blackhat = cv2.morphologyEx(image, cv2.MORPH_BLACKHAT, blackhatKernel)
 
     DEBUG_display_image(blackhat, "Blackhat")
@@ -67,7 +67,7 @@ def extract_mrz(image):
 
     # apply a closing operation using the rectangular kernel to close
     # gaps in between letters -- then apply Otsu's thresholding method
-    closingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (18, 8))
+    closingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (27, 12))
     thresh = cv2.morphologyEx(gradX, cv2.MORPH_CLOSE, closingKernel)
     thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
@@ -77,9 +77,9 @@ def extract_mrz(image):
     # kernel to close gaps between lines of the MRZ, then perform a
     # series of erosions to break apart connected components
     thresh = cv2.erode(thresh, None, iterations=2)
-    mrzClosingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (18, 55))
+    mrzClosingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (27, 80))
     thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, mrzClosingKernel)
-    erodeKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (4, 4))
+    erodeKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (6, 6))
     thresh = cv2.erode(thresh, erodeKernel, iterations=4)
 
     DEBUG_display_image(thresh, "After")

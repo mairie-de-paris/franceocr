@@ -16,7 +16,7 @@ def ocr_cni(image):
     ocr_result = ocr(
         image,
         "eng",
-        "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni"
+        "--oem 2 " + BASEDIR + "/tessconfig/cni"
     )
 
     return ocr_result \
@@ -27,8 +27,8 @@ def ocr_cni(image):
 def ocr_cni_birth_date(image):
     ocr_result = ocr(
         image,
-        "fra",
-        "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni-birth_date"
+        "eng",
+        "--oem 2 " + BASEDIR + "/tessconfig/cni-birth_date"
     )
 
     return ocr_result.replace(" ", "")
@@ -37,8 +37,8 @@ def ocr_cni_birth_date(image):
 def ocr_cni_birth_place(image):
     ocr_result = ocr(
         image,
-        "fra",
-        "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni-birth_place"
+        "eng",
+        "--oem 2 " + BASEDIR + "/tessconfig/cni-birth_place"
     )
 
     return re.sub(

@@ -133,39 +133,12 @@ def extract_document(image):
 def improve_image(image):
     image = imutils.resize(image, height=IMAGE_HEIGHT)
 
-    # no_red_zones = image[:,:,2] <= 100
-    # image[no_red_zones] = 255
-    # image[~no_red_zones] = 0
-    #
-    # # To grayscale
-    # image = np.amax(image, axis=2)
-    # image = (image == 255) * 255
-    # image = image.astype("uint8")
-
-    # return image
-
-    # image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    # cv2.imwrite("hsv_h.jpg", image_hsv[:, :, 0])
-    # cv2.imwrite("hsv_s.jpg", image_hsv[:, :, 1])
-    # cv2.imwrite("hsv_v.jpg", image_hsv[:, :, 2])
-    #
-    # lower_orange = np.array([40 / 2, 0, 0])
-    # upper_orange = np.array([70 / 2, 30, 150])
-    # image_orange = cv2.inRange(image_hsv, lower_orange, upper_orange)
-    #
-    # INFO_display_image(image_orange, "Mask")
-    # INFO_display_image(image, "Before")
-    #
-    # image[image_orange == 255] = [255, 255, 255]
-    # INFO_display_image(image, "After")
-
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    image = cv2.GaussianBlur(image, (3, 3), 0)
-
+    image = cv2.GaussianBlur(image, (5, 5), 0)
 
     # smooth the image using a 3x3 Gaussian, then apply the blackhat
     # morphological operator to find dark regions on a light background
-    rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (21, 9))
+    rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (40, 40))
     image = cv2.morphologyEx(image, cv2.MORPH_BLACKHAT, rectKernel)
     image = cv2.bitwise_not(image)
 
@@ -225,9 +198,9 @@ def compute_skew(image):
     theta_step = 1 * np.pi / 180
     threshold = 100
     min_line_length = image.shape[1] * 0.6
-    max_line_gap = 20
+    max_line_gap = 40
     lines = cv2.HoughLinesP(
-        edged[300:, :],
+        edged[220:, :],
         rho_step,
         theta_step,
         threshold,
@@ -333,7 +306,6 @@ def detect_text(image):
         cv2.RETR_EXTERNAL,
         cv2.CHAIN_APPROX_SIMPLE
     )[-2]
-    print(contours)
 
     zones = []
     for contour in contours:
