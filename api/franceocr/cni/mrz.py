@@ -108,7 +108,7 @@ def extract_mrz(image):
         ar = w / h
         crWidth = w / image.shape[1]
 
-        logging.debug(ar, crWidth)
+        logging.debug("Aspect Ratio %d Width Ratio %d", ar, crWidth)
 
         # check to see if the aspect ratio and coverage width are within
         # acceptable criteria
@@ -228,3 +228,10 @@ def mrz_to_dict(mrz_data):
         )
 
     return values
+
+
+def process_cni_mrz(image):
+    mrz_image = extract_mrz(image)
+    mrz_data = read_mrz(mrz_image)
+
+    return mrz_to_dict(mrz_data)

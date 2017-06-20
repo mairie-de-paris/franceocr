@@ -1,15 +1,22 @@
 import os.path
-import pytesseract
+import pyocr
+import pyocr.builders
 import re
 
 from franceocr.config import BASEDIR
-from PIL import Image, ImageFilter
+from PIL import Image
 
 
 def ocr(image, lang="fra", config=None):
     image = Image.fromarray(image)
-    # image.filter(ImageFilter.SHARPEN)
-    return pytesseract.image_to_string(image, lang=lang, config=config)
+    tools = pyocr.get_available_tools()
+    # The tools are returned in the recommended order of usage
+    tool = tools[1]
+
+    return tool.image_to_string(
+        image,
+        lang=lang,
+    )
 
 
 def ocr_cni(image):

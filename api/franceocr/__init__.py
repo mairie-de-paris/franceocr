@@ -1,1 +1,1 @@
-from .cni import process_cni
+from .cni import cni_process

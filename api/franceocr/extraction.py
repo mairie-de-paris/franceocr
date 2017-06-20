@@ -168,6 +168,51 @@ def improve_image(image):
     return image
 
 
+def improve_bbox_image(image):
+    image = image.copy()
+    image = cv2.GaussianBlur(image, (3, 3), 0)
+    blackhatKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 12))
+    blackhat = cv2.morphologyEx(image, cv2.MORPH_BLACKHAT, blackhatKernel)
+
+    DEBUG_display_image(blackhat, "Blackhat", resize=False)
+
+    gradX = cv2.Sobel(blackhat, ddepth=cv2.CV_32F, dx=1, dy=0, ksize=-1)
+    gradX = np.absolute(gradX)
+    (minVal, maxVal) = (np.min(gradX), np.max(gradX))
+    gradX = (255 * ((gradX - minVal) / (maxVal - minVal))).astype("uint8")
+    gradX[gradX >= 180] = 255
+
+    DEBUG_display_image(gradX, "GradX", resize=False)
+
+    closingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (50, 6))
+    thresh = cv2.morphologyEx(gradX, cv2.MORPH_CLOSE, closingKernel)
+    thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+
+    DEBUG_display_image(thresh, "Before", resize=False)
+
+    thresh = cv2.erode(thresh, None, iterations=1)
+    thresh = cv2.dilate(thresh, None, iterations=1)
+
+    DEBUG_display_image(thresh, "After", resize=False)
+
+    significant = find_significant_contours(thresh)
+
+    contour = significant[0]
+
+    x, y, w, h = cv2.boundingRect(contour)
+
+    pX = 10
+    pY = 7
+    x, y = max(x - pX, 0), max(y - pY, 0)
+    w, h = min(w + (pX * 2), image.shape[1]), min(h + (pY * 2), image.shape[0])
+
+    contour = (x, y, w, h)
+
+    contour = np.int0(contour)
+
+    return image[y:y + h, x:x + w].copy()
+
+
 def compute_skew(image):
     """Compute the skew of an image.
 

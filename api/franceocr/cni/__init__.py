@@ -1,2 +1,1 @@
-def process_cni(image):
-    pass
+from .processing import cni_process
