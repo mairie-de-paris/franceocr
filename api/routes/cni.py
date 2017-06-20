@@ -1,14 +1,15 @@
 import os
 
-from Flask import jsonify
+from flask import Blueprint, jsonify
 from franceocr import process_cni
 from werkzeug.utils import secure_filename
 
-from ..app import app
-from ..utils import allowed_file
+from utils import allowed_file
+
+cni_blueprint = Blueprint('cni', __name__)
 
 
-@app.route('/api/CNI/scan', methods=['POST'])
+@cni_blueprint.route('/cni/scan', methods=['POST'])
 def cni_scan():
     image = request.files.get('image')
 
@@ -19,10 +20,10 @@ def cni_scan():
         raise InvalidUsageException('Invalid file type')
 
     filename = secure_filename(image.filename)
-    image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    image.save(os.path.join(server.config['UPLOAD_FOLDER'], filename))
 
     output = ''
 
     return jsonify({
-        'output': output
+        'data': output
     })

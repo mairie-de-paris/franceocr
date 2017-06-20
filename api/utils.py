@@ -3,7 +3,7 @@ import requests
 from io import BytesIO
 from PIL import Image
 
-from .config import ALLOWED_MIME
+from config import ALLOWED_MIME
 
 
 def get_image(filename):
