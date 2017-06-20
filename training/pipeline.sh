@@ -1,6 +1,9 @@
 rm -rf franceocr_from_eng/
 mkdir -p franceocr_from_eng/
 
+cp franceocrdata/eng.franceocr*.tif langdata/eng/
+cp franceocrdata/eng.franceocr*.box langdata/eng/
+
 ../../tesseract/training/tesstrain.sh \
     --lang eng \
     --langdata_dir langdata \
