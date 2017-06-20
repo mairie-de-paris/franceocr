@@ -5,7 +5,7 @@ import os
 from flask import Blueprint, current_app, jsonify, request
 from franceocr import cni_process
 from PIL import Image
-from werkzeug.utils import secure_filename
+from uuid import uuid4
 
 from exceptions import InvalidUsageException
 from utils import allowed_file
@@ -23,7 +23,7 @@ def cni_scan():
     if not allowed_file(image_file):
         raise InvalidUsageException('Invalid file type')
 
-    filename = secure_filename(image_file.filename)
+    filename = str(uuid4()) + os.path.splitext(image_file.filename)[1]
     image_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
 
     image = Image.open(image_file.stream)
