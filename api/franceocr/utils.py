@@ -1,5 +1,6 @@
 import cv2
 import imutils
+import numpy as np
 
 from franceocr.config import DEBUG, INFO
 
@@ -33,3 +34,11 @@ def DEBUG_print(message):
         return
 
     print(message)
+
+
+def in_bounds(bbox, image):
+    """ Cut bbox to fit in the image """
+    bbox[:, 0] = np.maximum(0, np.minimum(bbox[:, 0], image.shape[1]))
+    bbox[:, 1] = np.maximum(0, np.minimum(bbox[:, 1], image.shape[0]))
+
+    return bbox

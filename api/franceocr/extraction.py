@@ -14,7 +14,12 @@ from skimage.restoration import denoise_bilateral
 from imutils.perspective import four_point_transform, order_points
 
 from franceocr.config import DEBUG, IMAGE_HEIGHT
-from franceocr.utils import DEBUG_display_image, DEBUG_print, INFO_display_image
+from franceocr.utils import (
+    DEBUG_display_image,
+    DEBUG_print,
+    INFO_display_image,
+    in_bounds
+)
 
 
 def edge_detect(channel):
@@ -60,7 +65,7 @@ def extract_document(image):
     # === Beginning of the pass 0 of the extraction === #
     # Use edges to find a first approximation of the document
 
-    blurred = cv2.GaussianBlur(image, (5, 5), 0)
+    blurred = cv2.GaussianBlur(image, (3, 3), 0)
     edged = np.max(np.array([
         edge_detect(blurred[:, :, 0]),
         edge_detect(blurred[:, :, 1]),
@@ -68,16 +73,16 @@ def extract_document(image):
     ]), axis=0)
     mean = np.mean(edged)
     # Zero any value that is less than mean. This reduces a lot of noise.
-    edged[edged <= mean] = 0
+    edged[edged <= 1.5 * mean] = 0
 
     edged_8u = np.asarray(edged, np.uint8)
+
+    DEBUG_display_image(edged_8u, "Edged")
 
     # Find contours
     significant = find_significant_contours(edged_8u)
 
     contour = significant[0]
-    epsilon = 0.10 * cv2.arcLength(contour, True)
-    contour = cv2.approxPolyDP(contour, epsilon, True)
     bbox = cv2.boxPoints(cv2.minAreaRect(contour))
     bbox = np.int0(bbox)
 
@@ -138,6 +143,8 @@ def extract_document(image):
     bbox[2] = bbox[1] + HEADER_TO_BODY * (bbox[2] - bbox[1])
     bbox[3] = bbox[0] + HEADER_TO_BODY * (bbox[3] - bbox[0])
     bbox = np.int0(bbox)
+
+    bbox = in_bounds(bbox, image)
 
     DEBUG_display_image(image, "Corrected")
 
