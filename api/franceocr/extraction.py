@@ -11,7 +11,7 @@ from skimage.filters import threshold_local
 from skimage.exposure import adjust_sigmoid, equalize_adapthist, equalize_hist
 from skimage.morphology import binary_closing, closing
 from skimage.restoration import denoise_bilateral
-from imutils.perspective import four_point_transform
+from imutils.perspective import four_point_transform, order_points
 
 from franceocr.config import DEBUG, IMAGE_HEIGHT
 from franceocr.utils import DEBUG_display_image, DEBUG_print, INFO_display_image
@@ -60,29 +60,32 @@ def extract_document(image):
     # === Beginning of the first pass of the extraction === #
 
     image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    lower_blue = np.array([210 / 2, 60, 50])
+    lower_blue = np.array([210 / 2, 120, 50])
     upper_blue = np.array([230 / 2, 255, 255])
     image_blue = cv2.inRange(image_hsv, lower_blue, upper_blue)
 
-    blurred = cv2.GaussianBlur(image_blue, (3, 3), 0)
+    blurred = cv2.GaussianBlur(image_blue, (5, 5), 0)
 
     DEBUG_display_image(image, "Image", alone=False)
-    DEBUG_display_image(blurred, "Edged")
 
     # Find contours
     significant = find_significant_contours(blurred, ratio=0.01)
 
     contour = significant[0]
-    contour = cv2.boxPoints(cv2.minAreaRect(contour))
+    bbox = cv2.boxPoints(cv2.minAreaRect(contour))
+    bbox = order_points(bbox)
 
     # FIXME Buffer overflow
     HEADER_TO_BODY = 1400 / 125
-    contour[0] = contour[1] + HEADER_TO_BODY * (contour[0] - contour[1])
-    contour[3] = contour[2] + HEADER_TO_BODY * (contour[3] - contour[2])
-    contour = np.int0(contour)
+    bbox[2] = bbox[1] + HEADER_TO_BODY * (bbox[2] - bbox[1])
+    bbox[3] = bbox[0] + HEADER_TO_BODY * (bbox[3] - bbox[0])
+    bbox = np.int0(bbox)
 
-    image = four_point_transform(image, contour.reshape(4, 2))
-    output = four_point_transform(orig, contour.reshape(4, 2) * ratio)
+    cv2.drawContours(blurred, [np.int0(bbox)], -1, (255, 0, 0), 2)
+    DEBUG_display_image(blurred, "Edged")
+
+    image = four_point_transform(image, bbox.reshape(4, 2))
+    output = four_point_transform(orig, bbox.reshape(4, 2) * ratio)
 
     DEBUG_display_image(image, "Extracted")
 
