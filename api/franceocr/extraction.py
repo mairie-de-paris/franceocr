@@ -57,7 +57,38 @@ def extract_document(image):
 
     image = imutils.resize(image, height=IMAGE_HEIGHT)
 
+    # === Beginning of the pass 0 of the extraction === #
+    # Use edges to find a first approximation of the document
+
+    blurred = cv2.GaussianBlur(image, (5, 5), 0)
+    edged = np.max(np.array([
+        edge_detect(blurred[:, :, 0]),
+        edge_detect(blurred[:, :, 1]),
+        edge_detect(blurred[:, :, 2])
+    ]), axis=0)
+    mean = np.mean(edged)
+    # Zero any value that is less than mean. This reduces a lot of noise.
+    edged[edged <= mean] = 0
+
+    edged_8u = np.asarray(edged, np.uint8)
+
+    # Find contours
+    significant = find_significant_contours(edged_8u)
+
+    contour = significant[0]
+    epsilon = 0.10 * cv2.arcLength(contour, True)
+    contour = cv2.approxPolyDP(contour, epsilon, True)
+    bbox = cv2.boxPoints(cv2.minAreaRect(contour))
+    bbox = np.int0(bbox)
+
+    image = four_point_transform(image, bbox.reshape(4, 2))
+    orig = four_point_transform(orig, bbox.reshape(4, 2) * ratio)
+
+    DEBUG_display_image(image, "Extracted0")
+
+    # === End of the pass 0 of the extraction === #
     # === Beginning of the first pass of the extraction === #
+    # Finds the blue header of the CNI to improve the extraction
 
     image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     lower_blue = np.array([210 / 2, 120, 50])
@@ -67,12 +98,39 @@ def extract_document(image):
     blurred = cv2.GaussianBlur(image_blue, (5, 5), 0)
 
     DEBUG_display_image(image, "Image", alone=False)
+    DEBUG_display_image(blurred, "Blue component", alone=False)
 
     # Find contours
     significant = find_significant_contours(blurred, ratio=0.01)
 
     contour = significant[0]
     bbox = cv2.boxPoints(cv2.minAreaRect(contour))
+
+    # Make sure the document has the right orientation
+    center_x, center_y = np.mean(bbox, axis=0)
+
+    if center_x < image.shape[1] / 3:
+        image = imutils.rotate_bound(image, 90)
+        orig = imutils.rotate_bound(orig, 90)
+        # Rotate bbox 90°
+        tmp = bbox[:, 0].copy()
+        bbox[:, 0] = image.shape[1] - bbox[:, 1]
+        bbox[:, 1] = tmp
+
+    elif center_x > 2 * image.shape[1] / 3:
+        image = imutils.rotate_bound(image, -90)
+        orig = imutils.rotate_bound(orig, -90)
+        # Rotate bbox -90°
+        tmp = bbox[:, 0].copy()
+        bbox[:, 0] = bbox[:, 1]
+        bbox[:, 1] = image.shape[0] - tmp
+
+    elif center_y > 2 * image.shape[0] / 3:
+        image = imutils.rotate_bound(image, 180)
+        orig = imutils.rotate_bound(orig, 180)
+        # Rotate bbox 180°
+        bbox = (image.shape[1], image.shape[0]) - bbox
+
     bbox = order_points(bbox)
 
     # FIXME Buffer overflow
@@ -81,8 +139,7 @@ def extract_document(image):
     bbox[3] = bbox[0] + HEADER_TO_BODY * (bbox[3] - bbox[0])
     bbox = np.int0(bbox)
 
-    cv2.drawContours(blurred, [np.int0(bbox)], -1, (255, 0, 0), 2)
-    DEBUG_display_image(blurred, "Edged")
+    DEBUG_display_image(image, "Corrected")
 
     image = four_point_transform(image, bbox.reshape(4, 2))
     output = four_point_transform(orig, bbox.reshape(4, 2) * ratio)
