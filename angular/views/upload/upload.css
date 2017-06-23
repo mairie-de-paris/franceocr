@@ -1,0 +1,55 @@
+/* CSS specific to upload view */
+.fileUpload {
+    position: relative;
+    overflow: hidden;
+}
+.fileUpload input.upload {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+    font-size: 20px;
+    cursor: pointer;
+    opacity: 0;
+    filter: alpha(opacity=0);
+}
+.upload-drop-box {
+    margin-top: 30px;
+    background: #F8F8F8;
+    border: 5px dashed #DDD;
+    width: 365px;
+    height: 65px;
+    text-align: center;
+    padding-top: 19px;
+    color: gray;
+}
+.upload-drop-box-dragover {
+    border: 5px dashed blue;
+}
+.upload-drop-box-dragover-err {
+    background-color: red;
+}
+
+/* Animation during upload request */
+
+.upload-controls-fadeout {
+  -webkit-transition:all linear 0.2s;
+  transition:all linear 0.2s;
+}
+
+.upload-controls-fadeout.ng-hide {
+  opacity:0;
+}
+
+.loading-indicator-container {
+    padding-top: 30px;
+}
+.loading-text {
+  -webkit-transition:all linear 1s;
+  transition:all linear 1s;
+
+}
+.loading-text.ng-hide {
+  opacity:0;
+}

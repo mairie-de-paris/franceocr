@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp" class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <html ng-app="myApp">
+      <meta name="description" content="">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+
+      <!-- Normal Bootstrap mobile view -->
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <!-- Disable zoom -->
+      <!-- <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"> -->
+
+      <title>Scan de carte d'identité</title>
+
+      <link rel="stylesheet" href="css/style.css" type="text/css">
+      <link rel="stylesheet" href="css/animations.css" type="text/css">
+      <link rel="stylesheet" href="css/bootstrap.min.css">
+      <link rel="stylesheet" href="angular/components/loading-indicator/loading-bar.css">
+      <link rel="shortcut icon" type="image/png" href="img/favicon.png"/>
+
+  </head>
+
+  <body>
+
+    <ul ng-controller="NavbarController" class="nav nav-tabs">
+
+      <li  ng-class="{ active: isActive('/home')}"><a href="#/home">Accueil</a></li>
+      <li  ng-class="{ active: isActive('/upload')}"><a href="#/upload">Importation</a></li>
+
+    </ul>
+
+    <!-- Container for dynamic page content, which is animated. -->
+    <div class="container"><div ng-view class="view-animate"></div></div>
+
+    <!-- Load libs -->
+    <script src="libs/angular-file-upload-html5-shim.js"></script>
+    <script src="libs/jquery.js"></script>
+    <script src="libs/angular.js"></script>
+    <script src="libs/angular-route.js"></script>
+    <script src="libs/angular-cookies.js"></script>
+    <script src="libs/angular-animate.js"></script>
+    <script src="libs/bootstrap.js"></script>
+    <script src="libs/angular-file-upload.js"></script>
+    <script src="libs/underscore.js"></script>
+    <script src="libs/d3.js"></script>
+
+    <script src="angular/app.js"></script>
+
+    <!-- View controllers -->
+    <script src="angular/views/home/home-controller.js"></script>
+    <script src="angular/views/upload/upload-controller.js"></script>
+    <script src="angular/views/navbar/navbar-controller.js"></script>
+
+    <!-- Reusable components and utilities -->
+    <script src="angular/components/visualization/data-visualization-directives.js"></script>
+    <script src="angular/components/loading-indicator/loading-bar.js"></script>
+
+
+  </body>
+</html>
