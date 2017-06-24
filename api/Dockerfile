@@ -11,28 +11,26 @@ RUN pacman -S --needed --noconfirm leptonica hdf5
 RUN git clone https://github.com/tesseract-ocr/tesseract.git /deps/tesseract
 RUN mkdir -p /deps/tesseract/build
 WORKDIR /deps/tesseract/build
-RUN cmake -DCMAKE_INSTALL_PREFIX=/usr .. && make
+RUN cmake .. && make
 RUN make install
-
-# Install official lang data
-# RUN
 
 RUN groupadd python && useradd --create-home --home-dir /home/python -g python python
 
 RUN mkdir /app && chown python:python /app && chmod 700 /app
 RUN mkdir /uploads && chown python:python /uploads && chmod 700 /uploads
 
-WORKDIR /app
+USER python
+ENV PATH="/usr/local/bin:${PATH}" LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib" TESSDATA_PREFIX=/usr/local/share/tessdata
+EXPOSE 5000
 
-# Install trained lang data
-COPY franceocr.traineddata /usr/local/share/tessdata
+WORKDIR /app
 
 # Install python dependencies
 COPY requirements.txt /app
 RUN pip install -U -r requirements.txt
 
-USER python
-EXPOSE 5000
+# Install trained lang data
+COPY franceocr.traineddata $TESSDATA_PREFIX
 
 COPY . /app
 
