@@ -24,7 +24,7 @@ RUN mkdir /app && chown python /app && chmod 700 /app
 WORKDIR /app
 
 # Install trained lang data
-RUN cp franceocr.traineddata /usr/local/share/tessdata
+COPY franceocr.traineddata /usr/local/share/tessdata
 
 # Install python dependencies
 COPY requirements.txt /app
