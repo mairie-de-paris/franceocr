@@ -30,6 +30,7 @@ RUN pip install -U -r requirements.txt
 # Install trained lang data
 RUN mkdir -p $TESSDATA_PREFIX
 COPY franceocr.traineddata $TESSDATA_PREFIX
+COPY OCRB.traineddata $TESSDATA_PREFIX
 
 COPY . /app
 
