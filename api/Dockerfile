@@ -5,7 +5,7 @@ RUN pacman -Sy
 RUN pacman -S --needed --noconfirm opencv python-numpy eigen
 RUN pacman -S --needed --noconfirm python-pip
 RUN pacman -S --needed --noconfirm git gcc make cmake pkg-config pango cairo icu
-RUN pacman -S --needed --noconfirm leptonica
+RUN pacman -S --needed --noconfirm leptonica hdf5
 
 # Install tesseract
 RUN git clone https://github.com/tesseract-ocr/tesseract.git /deps/tesseract
