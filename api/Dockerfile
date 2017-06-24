@@ -11,7 +11,7 @@ RUN pacman -S --needed --noconfirm leptonica hdf5
 RUN git clone https://github.com/tesseract-ocr/tesseract.git /deps/tesseract
 RUN mkdir -p /deps/tesseract/build
 WORKDIR /deps/tesseract/build
-RUN cmake .. && make
+RUN cmake -DCMAKE_INSTALL_PREFIX=/usr .. && make
 RUN make install
 
 # Install official lang data
