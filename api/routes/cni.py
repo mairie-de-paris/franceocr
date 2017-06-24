@@ -24,10 +24,16 @@ def cni_scan():
         raise InvalidUsageException('Invalid file type')
 
     filename = str(uuid4()) + os.path.splitext(image_file.filename)[1]
-    image_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+    filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+    image_file.save(filepath)
 
-    image = Image.open(image_file.stream)
-    image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+    # image = np.array(Image.open(image_file.stream))
+    # image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+    # print(image.shape)
+    # print(image.mean(axis=0).mean(axis=0))
+
+    # FIXME
+    image = cv2.imread(filepath)
 
     cni_data = cni_process(image)
 
