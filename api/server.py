@@ -12,7 +12,7 @@ server.debug = config.DEBUG
 CORS(
     server,
     resources={r"/*": {"origins": "*"}},
-    headers=['Content-Type', 'X-Requested-With', 'Authorization']
+    allow_headers=['Content-Type', 'X-Requested-With', 'Authorization']
 )
 
 # Load configuration

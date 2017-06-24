@@ -4,7 +4,7 @@ services:
     api:
         build: api
         volumes:
-            - api-data:/data/api:rw
+            - api-data:/uploads:rw
         ports:
             - "127.0.0.1:5000:5000"
         restart: always

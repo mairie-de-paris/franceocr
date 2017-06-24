@@ -19,7 +19,8 @@ RUN make install
 
 RUN groupadd python && useradd --create-home --home-dir /home/python -g python python
 
-RUN mkdir /app && chown python /app && chmod 700 /app
+RUN mkdir /app && chown python:python /app && chmod 700 /app
+RUN mkdir /uploads && chown python:python /uploads && chmod 700 /uploads
 
 WORKDIR /app
 
@@ -30,9 +31,9 @@ COPY franceocr.traineddata /usr/local/share/tessdata
 COPY requirements.txt /app
 RUN pip install -U -r requirements.txt
 
+USER python
+EXPOSE 5000
+
 COPY . /app
 
-USER python
-
-EXPOSE 5000
 CMD ["python", "server.py"]
