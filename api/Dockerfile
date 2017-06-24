@@ -19,9 +19,7 @@ RUN groupadd python && useradd --create-home --home-dir /home/python -g python p
 RUN mkdir /app && chown python:python /app && chmod 700 /app
 RUN mkdir /uploads && chown python:python /uploads && chmod 700 /uploads
 
-USER python
 ENV PATH="/usr/local/bin:${PATH}" LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib" TESSDATA_PREFIX=/usr/local/share/tessdata
-EXPOSE 5000
 
 WORKDIR /app
 
@@ -34,4 +32,6 @@ COPY franceocr.traineddata $TESSDATA_PREFIX
 
 COPY . /app
 
+USER python
+EXPOSE 5000
 CMD ["python", "server.py"]
