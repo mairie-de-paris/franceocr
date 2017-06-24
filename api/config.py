@@ -1,7 +1,7 @@
 import os, logging
 
 DEBUG = True
-HOST = os.getenv('HOST')
+HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', '5000'))
 
 logging.basicConfig(
