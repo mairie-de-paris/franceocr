@@ -4,7 +4,6 @@ import franceocr
 import numpy as np
 import os.path
 
-import matplotlib.pyplot as plt
 from skimage.feature import match_template
 
 from franceocr.config import IMAGE_HEIGHT, IMAGE_RATIO
