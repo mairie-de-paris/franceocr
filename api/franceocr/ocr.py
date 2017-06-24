@@ -1,6 +1,7 @@
 import os.path
 import pyocr
 import pyocr.builders
+import pytesseract
 import re
 
 from franceocr.config import BASEDIR
@@ -9,6 +10,12 @@ from PIL import Image
 
 def ocr(image, lang="fra", config=None):
     image = Image.fromarray(image)
+
+    return pytesseract.image_to_string(image, lang=lang, config=config)
+
+
+def ocr2(image, lang="fra", config=None):
+    image = Image.fromarray(image)
     tools = pyocr.get_available_tools()
     # The tools are returned in the recommended order of usage
     tool = tools[1]
@@ -16,13 +23,14 @@ def ocr(image, lang="fra", config=None):
     return tool.image_to_string(
         image,
         lang=lang,
+        builder=pyocr.builders.TextBuilder()
     )
 
 
 def ocr_cni(image):
     ocr_result = ocr(
         image,
-        "eng",
+        "franceocr",
         "--oem 2 " + BASEDIR + "/tessconfig/cni"
     )
 
@@ -34,7 +42,7 @@ def ocr_cni(image):
 def ocr_cni_birth_date(image):
     ocr_result = ocr(
         image,
-        "eng",
+        "franceocr",
         "--oem 2 " + BASEDIR + "/tessconfig/cni-birth_date"
     )
 
@@ -44,7 +52,7 @@ def ocr_cni_birth_date(image):
 def ocr_cni_birth_place(image):
     ocr_result = ocr(
         image,
-        "eng",
+        "franceocr",
         "--oem 2 " + BASEDIR + "/tessconfig/cni-birth_place"
     )
 

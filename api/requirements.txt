@@ -8,3 +8,4 @@ requests
 scikit-image
 imutils
 pytesseract
+pyocr
