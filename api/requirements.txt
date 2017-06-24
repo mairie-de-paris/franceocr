@@ -1,8 +1,10 @@
 Flask
+Flask-RESTful
+Flask-CORS
 Pillow
 argparse
-pytesseract
 coverage
 requests
-skimage
+scikit-image
 imutils
+pytesseract

@@ -36,5 +36,7 @@ cp /usr/local/share/tessdata/eng.traineddata franceocr_from_eng/franceocr.traine
 combine_tessdata -o franceocr_from_eng/franceocr.traineddata franceocr_from_eng/francocr.lstm
 combine_tessdata -o franceocr_from_eng/franceocr.traineddata franceocr_from_eng/eng.lstm-*
 
+cp franceocr_from_eng/franceocr.traineddata ../api
+
 # Install new lang data "franceocr"
 sudo cp franceocr_from_eng/franceocr.traineddata /usr/local/share/tessdata/
