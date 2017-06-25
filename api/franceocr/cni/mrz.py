@@ -108,7 +108,7 @@ def extract_mrz(image):
         ar = w / h
         crWidth = w / image.shape[1]
 
-        logging.debug("Aspect Ratio %d Width Ratio %d", ar, crWidth)
+        logging.debug("Aspect Ratio %f Width Ratio %f", ar, crWidth)
 
         # check to see if the aspect ratio and coverage width are within
         # acceptable criteria
@@ -129,7 +129,7 @@ def extract_mrz(image):
     DEBUG_display_image(image)
 
     # Further improve MRZ image quality
-    thresh = threshold_local(mrz_image, 27, offset=11)
+    thresh = threshold_local(mrz_image, 35, offset=13)
     mrz_image = mrz_image > thresh
     mrz_image = mrz_image.astype("uint8") * 255
 

@@ -139,7 +139,7 @@ def extract_document(image):
     bbox = order_points(bbox)
 
     # FIXME Buffer overflow
-    HEADER_TO_BODY = 1400 / 125
+    HEADER_TO_BODY = 1460 / 125
     bbox[2] = bbox[1] + HEADER_TO_BODY * (bbox[2] - bbox[1])
     bbox[3] = bbox[0] + HEADER_TO_BODY * (bbox[3] - bbox[0])
     bbox = np.int0(bbox)
@@ -325,7 +325,6 @@ def compute_skew(image):
         for line in lines:
             x1, y1, x2, y2 = line[0]
             angle = math.atan2(y2 - y1, x2 - x1) / np.pi * 180
-            logging.debug(angle)
             if abs(angle) < 15:
                 cv2.line(image, (x1, y1), (x2, y2), (255, 0, 0))
                 image_angle += angle
@@ -333,7 +332,7 @@ def compute_skew(image):
         # Mean image angle in degrees
         image_angle /= len(lines)
 
-    DEBUG_print("Document angle: {}".format(image_angle))
+    logging.debug("Document angle: %f", image_angle)
     DEBUG_display_image(image, "Lines")
 
     return image_angle
