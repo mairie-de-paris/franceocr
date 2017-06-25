@@ -1,7 +1,4 @@
 import sys
-import pytesseract
-
-from utils import get_image
 
 
 if __name__ == "__main__":

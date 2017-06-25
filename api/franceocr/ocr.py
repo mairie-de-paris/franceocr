@@ -1,4 +1,3 @@
-import os.path
 import pyocr
 import pyocr.builders
 import pytesseract

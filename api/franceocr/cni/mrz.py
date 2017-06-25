@@ -2,7 +2,6 @@ import cv2
 import imutils
 import logging
 import numpy as np
-import pytesseract
 
 from skimage.filters import threshold_local
 
@@ -10,10 +9,10 @@ from franceocr.config import IMAGE_HEIGHT
 from franceocr.cni.exceptions import (
     InvalidChecksumException, InvalidMRZException
 )
-from franceocr.exceptions import InvalidOCRException
+from franceocr.exceptions import ImageProcessingException, InvalidOCRException
 from franceocr.extraction import find_significant_contours
 from franceocr.ocr import ocr_cni_mrz
-from franceocr.utils import DEBUG_display_image, DEBUG_print
+from franceocr.utils import DEBUG_display_image, INFO_display_image
 
 
 def checksum_mrz(string):
@@ -133,7 +132,7 @@ def extract_mrz(image):
     mrz_image = mrz_image > thresh
     mrz_image = mrz_image.astype("uint8") * 255
 
-    DEBUG_display_image(mrz_image, "MRZ", resize=False)
+    INFO_display_image(mrz_image, "MRZ", resize=False)
 
     return mrz_image
 
@@ -154,12 +153,16 @@ def read_mrz(image):
 
     if len(mrz_data[0]) != 36:
         raise InvalidOCRException(
-            "Expected line 0 to be 36-chars long, is {}".format(len(mrz_data[0]))
+            "Expected line 0 to be 36-chars long, is {}".format(
+                len(mrz_data[0])
+            )
         )
 
     if len(mrz_data[1]) != 36:
         raise InvalidOCRException(
-            "Expected line 1 to be 36-chars long, is {}".format(len(mrz_data[1]))
+            "Expected line 1 to be 36-chars long, is {}".format(
+                len(mrz_data[1])
+            )
         )
 
     return mrz_data
@@ -175,17 +178,21 @@ def mrz_to_dict(mrz_data):
 
     if len(mrz_data[0]) != 36:
         raise InvalidMRZException(
-            "Expected line 0 to be 36-chars long, is {}".format(len(mrz_data[0]))
+            "Expected line 0 to be 36-chars long, is {}".format(
+                len(mrz_data[0])
+            )
         )
 
     if len(mrz_data[1]) != 36:
         raise InvalidMRZException(
-            "Expected line 1 to be 36-chars long, is {}".format(len(mrz_data[1]))
+            "Expected line 1 to be 36-chars long, is {}".format(
+                len(mrz_data[1])
+            )
         )
 
     line1, line2 = mrz_data
 
-    DEBUG_print("MRZ data: {}".format(mrz_data))
+    logging.debug("MRZ data: %s", mrz_data)
 
     values = {
         "id": line1[0:2],
@@ -231,7 +238,11 @@ def mrz_to_dict(mrz_data):
 
 
 def process_cni_mrz(image):
-    mrz_image = extract_mrz(image)
+    try:
+        mrz_image = extract_mrz(image)
+    except Exception as e:
+        raise ImageProcessingException('MRZ extraction failed')
+
     mrz_data = read_mrz(mrz_image)
 
     return mrz_to_dict(mrz_data)

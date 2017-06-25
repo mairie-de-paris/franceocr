@@ -1,16 +1,32 @@
 import cv2
-import numpy as np
 import os
 
 from flask import Blueprint, current_app, jsonify, request
 from franceocr import cni_process
-from PIL import Image
+from franceocr.cni.exceptions import (
+    InvalidChecksumException,
+    InvalidMRZException
+)
+from franceocr.exceptions import ImageProcessingException, InvalidOCRException
 from uuid import uuid4
 
 from exceptions import InvalidUsageException
 from utils import allowed_file
 
 cni_blueprint = Blueprint('cni', __name__)
+
+
+@cni_blueprint.errorhandler(ImageProcessingException)
+@cni_blueprint.errorhandler(InvalidChecksumException)
+@cni_blueprint.errorhandler(InvalidMRZException)
+@cni_blueprint.errorhandler(InvalidOCRException)
+def handle_errors(error):
+    response = jsonify({
+        'exception': type(error).__name__,
+        'message': error.args[0],
+    })
+    response.status_code = 422
+    return response
 
 
 @cni_blueprint.route('/cni/scan', methods=['POST'])
@@ -35,7 +51,12 @@ def cni_scan():
     # FIXME
     image = cv2.imread(filepath)
 
+    if min(image.shape[0], image.shape[1]) < 900:
+        raise InvalidUsageException('Image must be at least 900x900 pixels')
+
     cni_data = cni_process(image)
+
+    cni_data["filename"] = filename
 
     return jsonify({
         'data': cni_data

@@ -1,6 +1,5 @@
 import cv2
 import imutils
-import franceocr
 import numpy as np
 import os.path
 
@@ -8,9 +7,9 @@ from skimage.feature import match_template
 
 from franceocr.config import IMAGE_HEIGHT, IMAGE_RATIO
 from franceocr.detection import is_extracted
+from franceocr.exceptions import ImageProcessingException
 from franceocr.extraction import (
     extract_document,
-    find_significant_contours,
     improve_bbox_image,
     improve_image,
 )
@@ -82,9 +81,14 @@ def cni_locate_zones(image, improved):
     }
 
     for zone in zones:
-        template = cv2.imread(os.path.dirname(__file__) + "/../templates/cni-" + zone + ".png", 0)
+        template = cv2.imread(
+            os.path.dirname(__file__) + "/../templates/cni-" + zone + ".png", 0
+        )
         templateH, templateW = template.shape
-        template = imutils.resize(template, height=int(templateH * IMAGE_RATIO))
+        template = imutils.resize(
+            template,
+            height=int(templateH * IMAGE_RATIO)
+        )
         templateH, templateW = template.shape
 
         xMin = int(zones[zone]["after_x"] * IMAGE_RATIO)
@@ -144,13 +148,22 @@ def cni_read_zones(zones):
 def cni_process(image):
 
     if not is_extracted(image):
-        extracted = extract_document(image)
+        try:
+            extracted = extract_document(image)
+        except Exception as e:
+            raise ImageProcessingException('Document extraction failed')
     else:
         extracted = image
 
-    improved = improve_image(extracted)
+    try:
+        improved = improve_image(extracted)
+    except Exception as e:
+        raise ImageProcessingException('Image improvement failed')
 
-    zones = cni_locate_zones(extracted, improved)
+    try:
+        zones = cni_locate_zones(extracted, improved)
+    except Exception as e:
+        raise ImageProcessingException('Zones location failed')
 
     zones = cni_read_zones(zones)
 

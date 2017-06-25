@@ -1,8 +1,5 @@
 import cv2
-import imutils
 import numpy as np
-
-from franceocr.config import IMAGE_HEIGHT
 
 
 def is_blurred(image, threshold=100):

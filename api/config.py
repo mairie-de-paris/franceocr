@@ -1,4 +1,5 @@
-import os, logging
+import logging
+import os
 
 DEBUG = True
 HOST = os.getenv('HOST', '0.0.0.0')

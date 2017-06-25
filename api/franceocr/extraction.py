@@ -1,22 +1,16 @@
-import argparse
 import cv2
 import imutils
 import logging
 import math
 import numpy as np
 
-from operator import itemgetter
-
-from skimage.filters import threshold_local
-from skimage.exposure import adjust_sigmoid, equalize_adapthist, equalize_hist
-from skimage.morphology import binary_closing, closing
-from skimage.restoration import denoise_bilateral
+from skimage.exposure import equalize_hist
+from skimage.morphology import closing
 from imutils.perspective import four_point_transform, order_points
 
-from franceocr.config import DEBUG, IMAGE_HEIGHT
+from franceocr.config import IMAGE_HEIGHT
 from franceocr.utils import (
     DEBUG_display_image,
-    DEBUG_print,
     INFO_display_image,
     in_bounds
 )
