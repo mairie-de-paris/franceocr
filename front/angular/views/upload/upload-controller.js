@@ -1,4 +1,4 @@
-"use strict";
+"@ strict";
 
 angular.module('myApp.upload', ['angularFileUpload'])
   .controller('UploadController', function($scope, $upload, $location, $timeout) {
