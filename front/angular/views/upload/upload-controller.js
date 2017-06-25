@@ -15,6 +15,7 @@ angular.module('myApp.upload', ['angularFileUpload'])
         var file = $files[i];
         $scope.upload = $upload.upload({
         url: 'https://mairie.till034.net/cni/scan',
+        fileFormDataName: 'image',
         method: 'POST',
         file: file
         })
