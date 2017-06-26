@@ -1,7 +1,10 @@
 "@ strict";
 
-angular.module('myApp.upload', ['angularFileUpload'])
-  .controller('UploadController', function($scope, $upload, $location, $timeout) {
+angular.module('myApp.upload', ['angularFileUpload', 'myApp.scanService'])
+  .controller('UploadController', function($scope, $upload, $location, $timeout, scanService) {
+
+    scanService.setScanData(null);
+
 
     $scope.onFileSelect = function($files) {
       console.log("selecting files");
@@ -26,14 +29,15 @@ angular.module('myApp.upload', ['angularFileUpload'])
           // file is uploaded successfully
           console.log("Upload success, redirecting, response data:");
           console.log(data);
-
-
-
+          scanService.setScanData(data);
           $scope.loading = false;
+          $location.path('/results');
         }).error(function(er) {
           console.log("Upload error, try again");
           console.log(er);
           $scope.loading = false;
+          scanService.refuseScanData();
+          console.log("Let's try scanning again");
         });
         //.then(success, error, progress);
         // access or attach event listeners to the underlying XMLHttpRequest.

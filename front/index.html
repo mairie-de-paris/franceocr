@@ -25,7 +25,7 @@
 
       <li  ng-class="{ active: isActive('/home')}"><a href="#/home">Accueil</a></li>
       <li  ng-class="{ active: isActive('/upload')}"><a href="#/upload">Importation</a></li>
-
+      <li  ng-class="{ active: isActive('/results')}"><a href="#/results">Résultats</a></li>
     </ul>
 
     <!-- Container for dynamic page content, which is animated. -->
@@ -48,11 +48,14 @@
     <!-- View controllers -->
     <script src="angular/views/home/home-controller.js"></script>
     <script src="angular/views/upload/upload-controller.js"></script>
+    <script src="angular/views/results/results-controller.js"></script>
     <script src="angular/views/navbar/navbar-controller.js"></script>
 
-    <!-- Reusable components and utilities -->
+    <!-- Components and utilities -->
     <script src="angular/components/loading-indicator/loading-bar.js"></script>
 
+    <!-- Services -->
+    <script src="angular/services/scan-service.js"></script>
 
   </body>
 </html>
