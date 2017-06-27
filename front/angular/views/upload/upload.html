@@ -1,25 +1,25 @@
 <link rel="stylesheet" href="angular/views/upload/upload.css">
 <div class="upload-controls-fadeout" ng-show="!loading">
-  <div class="col-sm-6">
-    <h3>Scanner une nouvelle image</h3><br>
-    <div class="fileUpload btn btn-primary">
-      <span>Sélectionner l'image ou utiliser la caméra du téléphone</span>
-      <input type="file" class="upload" ng-file-select="onFileSelect($files)">
-    </div>
-    <div ng-file-drop="onFileSelect($files)" ng-file-drag-over-class="dragOverClass($event)"
-         ng-show="dropSupported" class="upload-drop-box">Glisser-déposer l'image</div>
-    <div ng-file-drop-available="dropSupported=true"
-         ng-show="!dropSupported">HTML5 Drop File n'est pas supporté !</div>
+    <div class="col-sm-6">
+        <h3>Scanner une nouvelle image</h3><br>
+        <div class="fileUpload btn btn-primary">
+            <span>Sélectionner l'image ou utiliser la caméra du téléphone</span>
+            <input type="file" class="upload" ng-file-select="onFileSelect($files)">
+        </div>
+        <div ng-file-drop="onFileSelect($files)" ng-file-drag-over-class="dragOverClass($event)"
+             ng-show="dropSupported" class="upload-drop-box">Glisser-déposer l'image</div>
+        <div ng-file-drop-available="dropSupported=true"
+             ng-show="!dropSupported">HTML5 Drop File n'est pas supporté !</div>
 
-  </div>
+    </div>
 </div>
 
 <div class="loading-indicator-container">
-  <div ng-show="loadingText" class="loading-text">
-    <h1 class="text-center">Image en cours d'importation...</h1>
-  </div>
-  <div ng-show="uploadPercent==100" class="loading-text text-center">
-    <h1>Image en cours d'analyse...</h1>
-    <p>(Cette étape prend normalement autour de 1000000 secondes)</p>
-  </div>
+    <div ng-show="loadingText && loading" class="loading-text">
+        <h1 class="text-center">Image en cours d'importation...</h1>
+    </div>
+    <div ng-show="uploadPercent==100 && loading" class="loading-text text-center">
+        <h1>Image en cours d'analyse...</h1>
+        <p>(Cette étape prend normalement environ 30 secondes)</p>
+    </div>
 </div>
