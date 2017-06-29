@@ -8,8 +8,9 @@ angular.module('myApp.results', ['myApp.scanService'])
         $scope.firstName = $scope.scanData.data.first_name_ocr;
         $scope.birthDate = $scope.scanData.data.birth_date_ocr;
         $scope.birthPlace = $scope.scanData.data.birth_place_ocr;
-        $scope.analyzedImgName = $scope.scanData.data.filename;
-        $scope.imgUrl = "https://mairie.till034.net/cni/scan/";
+        //$scope.analyzedImgName = $scope.scanData.data.filename;
+        //$scope.imgUrl = "https://mairie.till034.net/cni/scan/";
+        $scope.processedImg = scanData.processedImg;
 
         $scope.convertDate = function (originalDate) {
             // convert daymonthyear to day/month/year

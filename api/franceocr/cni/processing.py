@@ -187,4 +187,5 @@ def cni_process(image):
 
         "birth_place_ocr": zones["birth_place"]["value"],
         "birth_place_corrected": zones["birth_place"]["value"],
+        "processedImg": improved,
     }
