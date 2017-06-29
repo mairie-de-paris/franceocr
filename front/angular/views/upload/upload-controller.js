@@ -3,12 +3,14 @@
 angular.module('myApp.upload', ['angularFileUpload', 'myApp.scanService'])
     .controller('UploadController', function($scope, $upload, $location, $timeout, $window, scanService) {
 
-        // initializing scan data to "null"
+        // initializing scan data to "null" and error to false
         scanService.refuseScanData();
+        $scope.error = false;
 
         $scope.onFileSelect = function($files) {
             console.log("selecting files");
             $scope.loading = true;
+            $scope.error = false;
             $timeout(function() {
                 // Fadein loading text nicely
                 $scope.loadingText = true;
@@ -34,11 +36,15 @@ angular.module('myApp.upload', ['angularFileUpload', 'myApp.scanService'])
                         $window.location.href = "#/results";
 
                     }).error(function(er) {
-                        // file is not uploaded successfully
-                        console.log("Upload error, try again");
+                        // file is not uploaded or scanned successfully
+                        console.log("Upload error, let's try scanning again");
                         console.log(er);
-                        //scanService.refuseScanData();
-                        console.log("Let's try scanning again");
+                        $timeout(function() {
+                            // Fadein error text nicely
+                            $scope.error = true;
+                        }, 400);
+                        $scope.errorMessage = er.message;
+                        scanService.refuseScanData();
                         $scope.loading = false;
                         $window.location.href = "#/upload";
                     });

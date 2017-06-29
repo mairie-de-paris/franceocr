@@ -1,5 +1,19 @@
-<h1>Résultats du scan</h1>
+<h1>Résultats du scan</h1><br>
 <div>
-    <h5>Vous vous appelez {{convertFirstName(firstName)}} {{lastName | uppercase}},
-        vous êtes né(e) le {{convertDate(birthDate)}} à {{birthPlace}}.</h5>
+    <h5>Vous vous appelez <br><br>
+        <b>{{convertFirstName(firstName)}} {{lastName | uppercase}}</b> <br><br>
+        vous êtes né(e) le <br><br>
+        <b>{{convertDate(birthDate)}}</b> <br><br>
+        à <br><br>
+        <b>{{birthPlace}}</b>
+    </h5><br>
+    <p ng-show="">
+
+    </p><br><br>
+    <a class="btn btn-lg btn-primary" href="#/upload">Nouveau scan</a>
+
+    <br><br>
+    <p>{{imgUrl+analyzedImgName}}</p><br>
+    <img ng-src="{{imgUrl+analyzedImgName}}"><br>
+
 </div>
