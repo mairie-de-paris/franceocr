@@ -170,6 +170,9 @@ def cni_process(image):
     mrz_data = process_cni_mrz(extracted)
 
     return {
+        "extractedImg": extracted,
+        "processedImg": improved,
+
         "mrz": mrz_data,
 
         "last_name_mrz": mrz_data["last_name"],
@@ -187,5 +190,4 @@ def cni_process(image):
 
         "birth_place_ocr": zones["birth_place"]["value"],
         "birth_place_corrected": zones["birth_place"]["value"],
-        "processedImg": improved,
     }

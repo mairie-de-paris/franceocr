@@ -42,7 +42,7 @@ angular.module('myApp.upload', ['angularFileUpload', 'myApp.scanService'])
                         $timeout(function() {
                             // Fadein error text nicely
                             $scope.error = true;
-                        }, 400);
+                        }, 200);
                         $scope.errorMessage = er.message;
                         scanService.refuseScanData();
                         $scope.loading = false;

@@ -10,7 +10,7 @@ angular.module('myApp.results', ['myApp.scanService'])
         $scope.birthPlace = $scope.scanData.data.birth_place_ocr;
         //$scope.analyzedImgName = $scope.scanData.data.filename;
         //$scope.imgUrl = "https://mairie.till034.net/cni/scan/";
-        $scope.processedImg = scanData.processedImg;
+        $scope.processedImg = $scope.scanData.processedImg;
 
         $scope.convertDate = function (originalDate) {
             // convert daymonthyear to day/month/year
