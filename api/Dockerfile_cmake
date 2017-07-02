@@ -9,8 +9,10 @@ RUN pacman -S --needed --noconfirm leptonica hdf5
 
 # Install tesseract
 RUN git clone https://github.com/tesseract-ocr/tesseract.git /deps/tesseract
-WORKDIR /deps/tesseract
-RUN ./autogen.sh && ./configure && make && make install
+RUN mkdir -p /deps/tesseract/build
+WORKDIR /deps/tesseract/build
+RUN cmake .. && make
+RUN make install
 
 RUN groupadd python && useradd --create-home --home-dir /home/python -g python python
 
