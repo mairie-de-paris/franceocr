@@ -8,7 +8,7 @@ angular.module('myApp.results', ['myApp.scanService'])
         $scope.firstName = $scope.scanData.data.first_name_ocr;
         $scope.birthDate = $scope.scanData.data.birth_date_ocr;
         $scope.birthPlace = $scope.scanData.data.birth_place_ocr;
-        $scope.extractedImgUrl = $scope.scanData.image_path;
+        $scope.extractedImgUrl = "http://localhost:5000/" + $scope.scanData.image_path;
 
 
         $scope.convertDate = function (originalDate) {
