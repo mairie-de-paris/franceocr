@@ -1,6 +1,6 @@
 "use strict";
 angular.module('myApp.results', ['myApp.scanService'])
-    .controller('ResultsController', function($scope, scanService) {
+    .controller('ResultsController', function($scope, $sce, $http, scanService) {
 
         //putting data from scanService in $scope variables
         $scope.scanData = scanService.getScanData();
@@ -8,15 +8,15 @@ angular.module('myApp.results', ['myApp.scanService'])
         $scope.firstName = $scope.scanData.data.first_name_ocr;
         $scope.birthDate = $scope.scanData.data.birth_date_ocr;
         $scope.birthPlace = $scope.scanData.data.birth_place_ocr;
-        //$scope.analyzedImgName = $scope.scanData.data.filename;
-        //$scope.imgUrl = "https://mairie.till034.net/cni/scan/";
-        $scope.processedImg = $scope.scanData.processedImg;
+        $scope.extractedImgUrl = $scope.scanData.image_path;
+
 
         $scope.convertDate = function (originalDate) {
             // convert daymonthyear to day/month/year
-            return originalDate[0]+originalDate[1]+'/'
-                +originalDate[2]+originalDate[3]+'/'
-                +originalDate[4]+originalDate[5]+originalDate[6]+originalDate[7];
+            var day = originalDate[0]+originalDate[1];
+            var month = originalDate[2]+originalDate[3];
+            var year = originalDate[4]+originalDate[5]+originalDate[6]+originalDate[7];
+            return day+'/'+month+'/'+year;
         }
 
         $scope.convertFirstName = function (originalName) {
