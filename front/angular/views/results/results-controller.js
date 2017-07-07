@@ -8,6 +8,8 @@ angular.module('myApp.results', ['myApp.scanService'])
         $scope.firstName = $scope.scanData.data.first_name_ocr;
         $scope.birthDate = $scope.scanData.data.birth_date_ocr;
         $scope.birthPlace = $scope.scanData.data.birth_place_ocr;
+        $scope.birthCityExists = $scope.scanData.data.birth_city_exists;
+        $scope.convertedBirthPlace = $scope.scanData.data.converted_birth_place;
         $scope.extractedImgUrl = "http://localhost:5000/" + $scope.scanData.image_path;
 
 
@@ -30,6 +32,14 @@ angular.module('myApp.results', ['myApp.scanService'])
                 newFirstName = newFirstName + " " + names[i];
             }
             return newFirstName.slice(1, newFirstName.length); // slice() to remove the first space
+        }
+
+        $scope.correctBirthPlace = function(birthCityExists) {
+            //Translate de boolean information into an user-understandable sentence
+            if (birthCityExists) {
+                return "Le lieu de naissance est correct";
+            }
+            else{return "Le lieu de naissance semble erroné";}
         }
 
 

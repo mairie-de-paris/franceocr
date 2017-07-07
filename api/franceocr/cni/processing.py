@@ -1,10 +1,8 @@
+import os.path
+
 import cv2
 import imutils
 import numpy as np
-import os.path
-
-from skimage.feature import match_template
-
 from franceocr.config import IMAGE_HEIGHT, IMAGE_RATIO
 from franceocr.detection import is_extracted
 from franceocr.exceptions import ImageProcessingException
@@ -19,7 +17,13 @@ from franceocr.ocr import (
     ocr_cni_birth_place,
 )
 from franceocr.utils import DEBUG_display_image
+from skimage.feature import match_template
 
+from checkBirthCity import (
+    delete_numbers,
+    convertCapitalWord,
+    BirthCityExists
+)
 from .mrz import process_cni_mrz
 
 
@@ -112,7 +116,6 @@ def cni_locate_zones(image, improved):
             int(zones[zone]["height"] * IMAGE_RATIO)
         )
 
-
         # if zone == "birth_date":
         #     cropped = image[bbox[1]:bbox[1] + bbox[3], bbox[0]:bbox[0] + bbox[2]]
         # else:
@@ -169,6 +172,10 @@ def cni_process(image):
 
     mrz_data = process_cni_mrz(extracted)
 
+    birth_city_exists = BirthCityExists(zones["birth_place"]["value"])[0]
+
+    converted_birth_place = BirthCityExists(zones["birth_place"]["value"])[1]
+
     return {
         "mrz": mrz_data,
 
@@ -187,4 +194,6 @@ def cni_process(image):
 
         "birth_place_ocr": zones["birth_place"]["value"],
         "birth_place_corrected": zones["birth_place"]["value"],
+        "birth_city_exists": birth_city_exists,
+        "converted_birth_place": converted_birth_place,
     }

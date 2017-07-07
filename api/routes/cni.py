@@ -56,6 +56,7 @@ def cni_scan():
 
     cni_data = cni_process(image)
 
+
     return jsonify({
         'data': cni_data,
         'image_path': 'uploads/' + filename
