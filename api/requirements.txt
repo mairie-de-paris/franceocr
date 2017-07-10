@@ -9,3 +9,6 @@ scikit-image
 imutils
 pytesseract
 pyocr
+xlrd
+xlwt
+xlutils

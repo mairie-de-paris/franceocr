@@ -37,7 +37,3 @@ def BirthCityExists(city):
     cityList.close()
 
     return [city_exists, city_modified]
-
-
-# Testing
-print(BirthCityExists("Paris"))

@@ -11,6 +11,7 @@ angular.module('myApp.results', ['myApp.scanService'])
         $scope.birthCityExists = $scope.scanData.data.birth_city_exists;
         $scope.convertedBirthPlace = $scope.scanData.data.converted_birth_place;
         $scope.extractedImgUrl = "http://localhost:5000/" + $scope.scanData.image_path;
+        $scope.excelDataUrl = "http://localhost:5000" + $scope.scanData.excel_data_path;
 
 
         $scope.convertDate = function (originalDate) {

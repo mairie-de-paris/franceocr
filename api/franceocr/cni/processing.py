@@ -26,7 +26,6 @@ from checkBirthCity import (
 )
 from .mrz import process_cni_mrz
 
-
 def cni_locate_zones(image, improved):
     """Locate and extract regions of interest in the image.
 
@@ -148,52 +147,48 @@ def cni_read_zones(zones):
     return zones
 
 
-def cni_process(image):
+def cni_process(image, cni_data):
 
     if not is_extracted(image):
         try:
             extracted = extract_document(image)
         except Exception as e:
-            raise ImageProcessingException('Document extraction failed')
+            e.error_message = 'Document extraction failed'
+            raise e
+
     else:
         extracted = image
 
     try:
         improved = improve_image(extracted)
     except Exception as e:
-        raise ImageProcessingException('Image improvement failed')
+        e.error_message = 'Image improvement failed'
+        raise e
 
     try:
         zones = cni_locate_zones(extracted, improved)
     except Exception as e:
-        raise ImageProcessingException('Zones location failed')
+        e.error_message = 'Zones location failed'
+        raise e
 
     zones = cni_read_zones(zones)
-
     mrz_data = process_cni_mrz(extracted)
 
     birth_city_exists = BirthCityExists(zones["birth_place"]["value"])[0]
-
     converted_birth_place = BirthCityExists(zones["birth_place"]["value"])[1]
 
-    return {
-        "mrz": mrz_data,
-
-        "last_name_mrz": mrz_data["last_name"],
-        "last_name_ocr": zones["last_name"]["value"],
-
-        "first_name_mrz": mrz_data["first_name"],
-        "first_name_ocr": zones["first_name"]["value"],
-
-        "birth_date_mrz": "{}.{}.{}".format(
-            mrz_data["birth_day"],
-            mrz_data["birth_month"],
-            mrz_data["birth_year"],
-        ),
-        "birth_date_ocr": zones["birth_date"]["value"],
-
-        "birth_place_ocr": zones["birth_place"]["value"],
-        "birth_place_corrected": zones["birth_place"]["value"],
-        "birth_city_exists": birth_city_exists,
-        "converted_birth_place": converted_birth_place,
-    }
+    cni_data["mrz"] = mrz_data
+    cni_data["last_name_mrz"] = mrz_data["last_name"]
+    cni_data["last_name_ocr"] = zones["last_name"]["value"]
+    cni_data["first_name_mrz"] = mrz_data["first_name"]
+    cni_data["first_name_ocr"] = zones["first_name"]["value"]
+    cni_data["birth_date_mrz"] = "{}.{}.{}".format(
+        mrz_data["birth_day"],
+        mrz_data["birth_month"],
+        mrz_data["birth_year"],
+    )
+    cni_data["birth_date_ocr"] = zones["birth_date"]["value"]
+    cni_data["birth_place_ocr"] = zones["birth_place"]["value"]
+    cni_data["birth_place_corrected"] = zones["birth_place"]["value"]
+    cni_data["birth_city_exists"] = birth_city_exists
+    cni_data["converted_birth_place"] = converted_birth_place

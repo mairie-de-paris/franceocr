@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="angular/views/results/results.css">
+<!-- <link rel="stylesheet" href="angular/views/results/results.css">  -->
 <h1>Résultats du scan</h1><br>
 <div>
     <h5>Vous vous appelez <br><br>
@@ -13,10 +13,13 @@
         {{correctBirthPlace(birthCityExists)}} ({{convertedBirthPlace}})
     </div>
     <br>
+    <a class="btn btn-lg btn-primary" href="{{excelDataUrl}}" target="_blank"  style="margin-right: 5px;">Télécharger le fichier Excel </a>
 
+    <br><br>
     <a class="btn btn-lg btn-primary" href="#/upload">Nouveau scan</a>
 
     <br><br>
-    <img class="image" ng-src="{{extractedImgUrl}}" width="50%" height="50%" right="10">
+    <img class="image" ng-src="{{extractedImgUrl}}">
+
 
 </div>
