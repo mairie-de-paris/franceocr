@@ -60,8 +60,8 @@ def cni_scan():
 
     excel_path = '/uploads/exported_data.xls'
 
-    #if os.path.isfile(excel_path):
-        #os.remove(excel_path)
+    # if os.path.isfile(excel_path):
+    #     os.remove(excel_path)
 
     cni_data = {
         "mrz": None,
