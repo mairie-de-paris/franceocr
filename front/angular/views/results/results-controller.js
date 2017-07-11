@@ -8,9 +8,9 @@ angular.module('myApp.results', ['myApp.scanService'])
         $scope.firstName = $scope.scanData.data.first_name_ocr;
         $scope.birthDate = $scope.scanData.data.birth_date_ocr;
         $scope.birthPlace = $scope.scanData.data.birth_place_ocr;
-        $scope.birthCityExists = $scope.scanData.data.birth_city_exists;
-        $scope.convertedBirthPlace = $scope.scanData.data.converted_birth_place;
-        $scope.similarBirthCities = $scope.scanData.data.similar_birth_cities;
+        $scope.birthCityExists = $scope.scanData.data.birth_place_exists;
+        $scope.convertedBirthPlace = $scope.scanData.data.birth_place_corrected;
+        $scope.similarBirthCities = $scope.scanData.data.birth_place_similar;
         $scope.extractedImgUrl = "http://localhost:5000/" + $scope.scanData.image_path;
         $scope.excelDataUrl = "http://localhost:5000" + $scope.scanData.excel_data_path;
 

@@ -132,7 +132,6 @@ def extract_document(image):
 
     bbox = order_points(bbox)
 
-    # FIXME Buffer overflow
     HEADER_TO_BODY = 1460 / 125
     bbox[2] = bbox[1] + HEADER_TO_BODY * (bbox[2] - bbox[1])
     bbox[3] = bbox[0] + HEADER_TO_BODY * (bbox[3] - bbox[0])

@@ -58,7 +58,7 @@ def cni_scan():
     try:
         cni_data = cni_process(image)
     except ImageProcessingException as ex:
-        error_message_fr = ex.args[1]
+        error_message_fr = ex.args[1] if len(ex.args) > 1 else ex.args[0]
         fill_new_line(excel_path, None, None, None, None, "Oui", error_message_fr)
         raise ex
 
