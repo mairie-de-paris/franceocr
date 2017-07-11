@@ -19,10 +19,9 @@ from franceocr.ocr import (
 from franceocr.utils import DEBUG_display_image
 from skimage.feature import match_template
 
-from checkBirthCity import (
+from checkbirthcity import (
     delete_numbers,
-    convertCapitalWord,
-    BirthCityExists
+    birth_city_exists
 )
 from .mrz import process_cni_mrz
 
@@ -153,18 +152,17 @@ def cni_process(image):
         try:
             extracted = extract_document(image)
         except Exception as e:
-            raise Exception(
+            raise ImageProcessingException(
                 "Document extraction failed",
                 "L'extraction du document a échoué"
             )
-
     else:
         extracted = image
 
     try:
         improved = improve_image(extracted)
     except Exception as e:
-        raise Exception(
+        raise ImageProcessingException(
             "Image improvement failed",
             "L'amélioration du document a échoué"
         )
@@ -172,16 +170,14 @@ def cni_process(image):
     try:
         zones = cni_locate_zones(extracted, improved)
     except Exception as e:
-        raise Exception(
+        raise ImageProcessingException(
             "Zones location failed",
             "La détection des zones a échoué"
         )
 
     zones = cni_read_zones(zones)
     mrz_data = process_cni_mrz(extracted)
-
-    birth_city_exists = BirthCityExists(zones["birth_place"]["value"])[0]
-    converted_birth_place = BirthCityExists(zones["birth_place"]["value"])[1]
+    birth_city_exists_output = birth_city_exists(zones["birth_place"]["value"])
 
     return {
         "mrz": mrz_data,
@@ -201,6 +197,7 @@ def cni_process(image):
 
         "birth_place_ocr": zones["birth_place"]["value"],
         "birth_place_corrected": zones["birth_place"]["value"],
-        "birth_city_exists": birth_city_exists,
-        "converted_birth_place": converted_birth_place,
+        "birth_city_exists": birth_city_exists_output[0],
+        "converted_birth_place": birth_city_exists_output[1],
+        "similar_birth_cities": birth_city_exists_output[2],
     }

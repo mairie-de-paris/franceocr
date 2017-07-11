@@ -10,9 +10,13 @@ angular.module('myApp.results', ['myApp.scanService'])
         $scope.birthPlace = $scope.scanData.data.birth_place_ocr;
         $scope.birthCityExists = $scope.scanData.data.birth_city_exists;
         $scope.convertedBirthPlace = $scope.scanData.data.converted_birth_place;
+        $scope.similarBirthCities = $scope.scanData.data.similar_birth_cities;
         $scope.extractedImgUrl = "http://localhost:5000/" + $scope.scanData.image_path;
         $scope.excelDataUrl = "http://localhost:5000" + $scope.scanData.excel_data_path;
 
+        if (Object.keys($scope.similarBirthCities).length !== 0){
+            console.log('Similar birth cities with their associated score : ' + $scope.similarBirthCities)
+        }
 
         $scope.convertDate = function (originalDate) {
             // convert daymonthyear to day/month/year

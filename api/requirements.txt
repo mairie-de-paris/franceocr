@@ -12,3 +12,5 @@ pyocr
 xlrd
 xlwt
 xlutils
+fuzzywuzzy
+python-levenshtein

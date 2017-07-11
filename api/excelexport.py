@@ -21,10 +21,10 @@ def create_new_file(excel_file):
     #creating title cells style
     style_title = xlwt.easyxf(
         'font: bold on, color black; borders: left thin, right thin, top thin, bottom thin; pattern: pattern solid, fore_color white;')
-    alignTitle = xlwt.Alignment()
-    alignTitle.horz = xlwt.Alignment.HORZ_CENTER
-    alignTitle.vert = xlwt.Alignment.VERT_CENTER
-    style_title.alignment = alignTitle
+    align_title = xlwt.Alignment()
+    align_title.horz = xlwt.Alignment.HORZ_CENTER
+    align_title.vert = xlwt.Alignment.VERT_CENTER
+    style_title.alignment = align_title
 
     #merging title cells
     new_sheet.merge(0, 1, 0, 0, style=style_title)
@@ -74,10 +74,10 @@ def fill_new_line(excel_file, first_name, last_name, birth_date, birth_place, er
 
     style_title = xlwt.easyxf(
         'font: bold on, color black; borders: left thin, right thin, top thin, bottom thin; pattern: pattern solid, fore_color white;')
-    alignTitle = xlwt.Alignment()
-    alignTitle.horz = xlwt.Alignment.HORZ_CENTER
-    alignTitle.vert = xlwt.Alignment.VERT_CENTER
-    style_title.alignment = alignTitle
+    align_title = xlwt.Alignment()
+    align_title.horz = xlwt.Alignment.HORZ_CENTER
+    align_title.vert = xlwt.Alignment.VERT_CENTER
+    style_title.alignment = align_title
 
     #creating other cells styles
     style_data = xlwt.easyxf(

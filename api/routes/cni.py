@@ -12,7 +12,7 @@ from uuid import uuid4
 
 from exceptions import InvalidUsageException
 from utils import allowed_file
-from excelExport import (
+from excelexport import (
     create_new_file,
     fill_new_line
 )
@@ -65,7 +65,7 @@ def cni_scan():
 
     try :
         cni_data = cni_process(image)
-    except Exception as e:
+    except ImageProcessingException as e:
         error_message = e.args[0]
         error_message_fr = e.args[1]
         fill_new_line(excel_path, None, None, None, None, "Oui", error_message_fr)
@@ -80,3 +80,4 @@ def cni_scan():
         'image_path': 'uploads/' + filename,
         'excel_data_path': excel_path,
     })
+
