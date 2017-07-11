@@ -1,1 +1,1 @@
-from .processing import cni_process
+from processing import cni_process

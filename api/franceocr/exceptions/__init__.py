@@ -1,2 +1,2 @@
-from .ImageProcessingException import ImageProcessingException
-from .InvalidOCRException import InvalidOCRException
+from ImageProcessingException import ImageProcessingException
+from InvalidOCRException import InvalidOCRException
