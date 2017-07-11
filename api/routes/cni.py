@@ -63,30 +63,13 @@ def cni_scan():
     # if os.path.isfile(excel_path):
     #     os.remove(excel_path)
 
-    cni_data = {
-        "mrz": None,
-
-        "last_name_mrz": None,
-        "last_name_ocr": None,
-
-        "first_name_mrz": None,
-        "first_name_ocr": None,
-
-        "birth_date_mrz": None,
-        "birth_date_ocr": None,
-
-        "birth_place_ocr": None,
-        "birth_place_corrected": None,
-        "birth_city_exists": None,
-        "converted_birth_place": None,
-    }
-
     try :
-        cni_process(image, cni_data)
+        cni_data = cni_process(image)
     except Exception as e:
-        fill_new_line(excel_path, cni_data["first_name_ocr"], cni_data["last_name_ocr"],
-                      cni_data["birth_date_mrz"], cni_data["birth_place_ocr"], "Oui", e.error_message)
-        raise ImageProcessingException(e.error_message)
+        error_message = e.args[0]
+        error_message_fr = e.args[1]
+        fill_new_line(excel_path, None, None, None, None, "Oui", error_message_fr)
+        raise ImageProcessingException(error_message)
 
 
     fill_new_line(excel_path, cni_data["first_name_ocr"], cni_data["last_name_ocr"],

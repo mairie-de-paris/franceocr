@@ -1,6 +1,6 @@
 import xlrd
 import xlwt
-from xlutils.copy import copy
+import xlutils.copy
 import os
 
 def create_new_file(excel_file):
@@ -59,7 +59,7 @@ def fill_new_line(excel_file, first_name, last_name, birth_date, birth_place, er
     row_to_write = main_sheet.nrows
 
     #copying existing file to be able to write into it
-    workbook_copy = copy(main_workbook)
+    workbook_copy = xlutils.copy.copy(main_workbook)
     sheet_copy = workbook_copy.get_sheet(0)
 
     #rewriting cells style since it is not copied by xlutils.copy function
@@ -108,7 +108,7 @@ def fill_new_line(excel_file, first_name, last_name, birth_date, birth_place, er
     sheet_copy.write(0, 7, "Nombre d'erreurs", style=style_title)
     sheet_copy.write(1, 7, "Pourcentage d'erreur", style=style_title)
 
-    #injecting fresh data into the new file with the apropriate style
+    #injecting fresh data into the new file with the appropriate style
     sheet_copy.write(row_to_write, 0, first_name, style=style_data)
     sheet_copy.write(row_to_write, 1, last_name, style=style_data)
     sheet_copy.write(row_to_write, 2, birth_date, style=style_data)
@@ -118,10 +118,10 @@ def fill_new_line(excel_file, first_name, last_name, birth_date, birth_place, er
 
     #re-writing formulas since they are not copied by xlutils.copy function
     sheet_copy.write(0, 8, xlwt.Formula(
-        'COUNTIF(E1:E10;"Oui")'
+        'COUNTIF(E3:E10003;"Oui")'              #limit of 10 000 data entries
     ), style=style_error)
     sheet_copy.write(1, 8, xlwt.Formula(
-        '(I1/COUNTA(E1:E10))'
+        '(I1/(COUNTA(E3:E10003)))'              #limit of 10 000 data entries
     ), style=style_percent)
 
     #saving the new file (and erasing the old one)
