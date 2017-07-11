@@ -1,5 +1,4 @@
 import argparse
-import os.path
 
 from pathlib import Path
 from PIL import Image
