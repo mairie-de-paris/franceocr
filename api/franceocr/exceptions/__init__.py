@@ -1,2 +1,2 @@
-from ImageProcessingException import ImageProcessingException
-from InvalidOCRException import InvalidOCRException
+from franceocr.exceptions.ImageProcessingException import ImageProcessingException
+from franceocr.exceptions.InvalidOCRException import InvalidOCRException

@@ -6,9 +6,7 @@ import numpy as np
 from skimage.filters import threshold_local
 
 from franceocr.config import IMAGE_HEIGHT
-from franceocr.cni.exceptions import (
-    InvalidChecksumException, InvalidMRZException
-)
+from franceocr.cni.exceptions import InvalidChecksumException, InvalidMRZException
 from franceocr.exceptions import ImageProcessingException, InvalidOCRException
 from franceocr.extraction import find_significant_contours
 from franceocr.ocr import ocr_cni_mrz

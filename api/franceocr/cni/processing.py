@@ -1,29 +1,19 @@
-import os.path
-
 import cv2
 import imutils
+import os.path
 import numpy as np
+
+from skimage.feature import match_template
+
+from franceocr.cni.mrz import process_cni_mrz
 from franceocr.config import IMAGE_HEIGHT, IMAGE_RATIO
 from franceocr.detection import is_extracted
 from franceocr.exceptions import ImageProcessingException
-from franceocr.extraction import (
-    extract_document,
-    improve_bbox_image,
-    improve_image,
-)
-from franceocr.ocr import (
-    ocr_cni,
-    ocr_cni_birth_date,
-    ocr_cni_birth_place,
-)
+from franceocr.extraction import extract_document, improve_bbox_image, improve_image
+from franceocr.geo import city_exists
+from franceocr.ocr import ocr_cni, ocr_cni_birth_date, ocr_cni_birth_place
 from franceocr.utils import DEBUG_display_image
-from skimage.feature import match_template
 
-from checkbirthcity import (
-    delete_numbers,
-    birth_city_exists
-)
-from .mrz import process_cni_mrz
 
 def cni_locate_zones(image, improved):
     """Locate and extract regions of interest in the image.
@@ -177,7 +167,7 @@ def cni_process(image):
 
     zones = cni_read_zones(zones)
     mrz_data = process_cni_mrz(extracted)
-    birth_city_exists_output = birth_city_exists(zones["birth_place"]["value"])
+    birth_place_exists, birth_place_corrected, similar_birth_places = city_exists(zones["birth_place"]["value"])
 
     return {
         "mrz": mrz_data,
@@ -189,15 +179,14 @@ def cni_process(image):
         "first_name_ocr": zones["first_name"]["value"],
 
         "birth_date_mrz": "{}.{}.{}".format(
-        mrz_data["birth_day"],
-        mrz_data["birth_month"],
-        mrz_data["birth_year"],
+            mrz_data["birth_day"],
+            mrz_data["birth_month"],
+            mrz_data["birth_year"],
         ),
         "birth_date_ocr": zones["birth_date"]["value"],
 
         "birth_place_ocr": zones["birth_place"]["value"],
-        "birth_place_corrected": zones["birth_place"]["value"],
-        "birth_city_exists": birth_city_exists_output[0],
-        "converted_birth_place": birth_city_exists_output[1],
-        "similar_birth_cities": birth_city_exists_output[2],
+        "birth_place_corrected": birth_place_corrected,
+        "birth_place_exists": birth_place_exists,
+        "birth_place_similar": similar_birth_places,
     }

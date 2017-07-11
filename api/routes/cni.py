@@ -2,20 +2,15 @@ import cv2
 import os
 
 from flask import Blueprint, current_app, jsonify, request
-from franceocr import cni_process
-from franceocr.cni.exceptions import (
-    InvalidChecksumException,
-    InvalidMRZException
-)
-from franceocr.exceptions import ImageProcessingException, InvalidOCRException
 from uuid import uuid4
 
+from franceocr import cni_process
+from franceocr.cni.exceptions import InvalidChecksumException, InvalidMRZException
+from franceocr.exceptions import ImageProcessingException, InvalidOCRException
+
+from excel_export import fill_new_line
 from exceptions import InvalidUsageException
 from utils import allowed_file
-from excelexport import (
-    create_new_file,
-    fill_new_line
-)
 
 cni_blueprint = Blueprint('cni', __name__)
 
@@ -58,26 +53,27 @@ def cni_scan():
     if min(image.shape[0], image.shape[1]) < 900:
         raise InvalidUsageException('Image must be at least 900x900 pixels')
 
-    excel_path = '/uploads/exported_data.xls'
+    excel_path = os.path.join(current_app.config['UPLOAD_FOLDER'], "exported_data.xls")
 
-    # if os.path.isfile(excel_path):
-    #     os.remove(excel_path)
-
-    try :
+    try:
         cni_data = cni_process(image)
-    except ImageProcessingException as e:
-        error_message = e.args[0]
-        error_message_fr = e.args[1]
+    except ImageProcessingException as ex:
+        error_message_fr = ex.args[1]
         fill_new_line(excel_path, None, None, None, None, "Oui", error_message_fr)
-        raise ImageProcessingException(error_message)
+        raise ex
 
-
-    fill_new_line(excel_path, cni_data["first_name_ocr"], cni_data["last_name_ocr"],
-                  cni_data["birth_date_mrz"], cni_data["birth_place_ocr"], "Non", None)
+    fill_new_line(
+        excel_path,
+        cni_data["first_name_ocr"],
+        cni_data["last_name_ocr"],
+        cni_data["birth_date_mrz"],
+        cni_data["birth_place_ocr"],
+        "Non",
+        None
+    )
 
     return jsonify({
         'data': cni_data,
         'image_path': 'uploads/' + filename,
-        'excel_data_path': excel_path,
+        'excel_data_path': 'uploads/exported_data.xls',
     })
-

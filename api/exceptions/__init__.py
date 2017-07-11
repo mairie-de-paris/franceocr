@@ -1,1 +1,1 @@
-from .InvalidUsageException import InvalidUsageException
+from exceptions.InvalidUsageException import InvalidUsageException

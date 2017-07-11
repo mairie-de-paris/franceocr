@@ -1,1 +1,1 @@
-from processing import cni_process
+from franceocr.cni.processing import cni_process
