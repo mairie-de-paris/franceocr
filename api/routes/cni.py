@@ -1,4 +1,5 @@
 import cv2
+import logging
 import os
 
 from flask import Blueprint, current_app, jsonify, request
@@ -20,6 +21,7 @@ cni_blueprint = Blueprint('cni', __name__)
 @cni_blueprint.errorhandler(InvalidMRZException)
 @cni_blueprint.errorhandler(InvalidOCRException)
 def handle_errors(error):
+    logging.warn("FranceOCR exception", exc_info=True)
     response = jsonify({
         'exception': type(error).__name__,
         'message': error.args[0],

@@ -120,8 +120,7 @@ def extract_mrz(image):
             # extract the ROI from the image and draw a bounding box
             # surrounding the MRZ
             mrz_image = image[y:y + h, x:x + w].copy()
-            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            # break
+            break
 
     DEBUG_display_image(image)
 
@@ -141,8 +140,6 @@ def read_mrz(image):
     mrz_data = ocr_cni_mrz(image)
     mrz_data = mrz_data.replace(' ', '')
     mrz_data = mrz_data.split('\n')
-
-    logging.debug(mrz_data)
 
     if len(mrz_data) != 2:
         raise InvalidOCRException(
@@ -238,8 +235,9 @@ def mrz_to_dict(mrz_data):
 def process_cni_mrz(image):
     try:
         mrz_image = extract_mrz(image)
-    except Exception as e:
-        raise ImageProcessingException('MRZ extraction failed')
+    except Exception as ex:
+        logging.debug("MRZ extraction failed", exc_info=True)
+        raise ImageProcessingException("MRZ extraction failed") from ex
 
     mrz_data = read_mrz(mrz_image)
 

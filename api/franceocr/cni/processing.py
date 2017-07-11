@@ -1,7 +1,8 @@
 import cv2
 import imutils
-import os.path
+import logging
 import numpy as np
+import os.path
 
 from skimage.feature import match_template
 
@@ -141,29 +142,32 @@ def cni_process(image):
     if not is_extracted(image):
         try:
             extracted = extract_document(image)
-        except Exception as e:
+        except Exception as ex:
+            logging.debug("Document extraction failed", exc_info=True)
             raise ImageProcessingException(
                 "Document extraction failed",
                 "L'extraction du document a échoué"
-            )
+            ) from ex
     else:
         extracted = image
 
     try:
         improved = improve_image(extracted)
-    except Exception as e:
+    except Exception as ex:
+        logging.debug("Image improvement failed", exc_info=True)
         raise ImageProcessingException(
             "Image improvement failed",
             "L'amélioration du document a échoué"
-        )
+        ) from ex
 
     try:
         zones = cni_locate_zones(extracted, improved)
-    except Exception as e:
+    except Exception as ex:
+        logging.debug("Zones location failed", exc_info=True)
         raise ImageProcessingException(
             "Zones location failed",
             "La détection des zones a échoué"
-        )
+        ) from ex
 
     zones = cni_read_zones(zones)
     mrz_data = process_cni_mrz(extracted)
