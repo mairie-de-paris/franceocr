@@ -9,6 +9,7 @@ from franceocr import cni_process
 from franceocr.cni.exceptions import InvalidChecksumException, InvalidMRZException
 from franceocr.exceptions import ImageProcessingException, InvalidOCRException
 
+from database import mongo
 from excel_export import fill_new_line
 from exceptions import InvalidUsageException
 from utils import allowed_file
@@ -74,8 +75,12 @@ def cni_scan():
         None
     )
 
-    return jsonify({
+    result = {
         'data': cni_data,
         'image_path': 'uploads/' + filename,
         'excel_data_path': 'uploads/exported_data.xls',
-    })
+    }
+
+    mongo.db.cni.insert(result)
+
+    return jsonify(result)

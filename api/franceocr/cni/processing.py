@@ -128,7 +128,10 @@ def cni_read_zones(zones):
         image = zones[zone]["image"]
 
         if zone == "birth_date":
-            zones[zone]["value"] = ocr_cni_birth_date(image)
+            birth_date = ocr_cni_birth_date(image)
+            birth_date = birth_date.replace(',', '')
+            birth_date = birth_date.replace('.', '')
+            zones[zone]["value"] = birth_date
         elif zone == "birth_place":
             zones[zone]["value"] = ocr_cni_birth_place(image)
         else:

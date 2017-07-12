@@ -2,12 +2,15 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 
 import config
+from database import mongo
 from exceptions import InvalidUsageException
-from routes import cni_blueprint, common_blueprint
+from routes import cni_blueprint, common_blueprint, front_blueprint
 
 
 server = Flask(__name__)
 server.debug = config.DEBUG
+
+mongo.init_app(server)
 
 CORS(
     server,
@@ -28,6 +31,7 @@ def handle_invalid_usage(error):
 
 server.register_blueprint(cni_blueprint)
 server.register_blueprint(common_blueprint)
+server.register_blueprint(front_blueprint)
 
 if __name__ == '__main__':
     server.run(host=config.HOST, port=config.PORT)

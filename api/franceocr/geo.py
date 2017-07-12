@@ -1,7 +1,7 @@
 import operator
 import re
 
-from fuzzywuzzy import fuzz
+from fuzzywuzzy import fuzz, process
 
 from franceocr.config import BASEDIR
 
@@ -21,27 +21,17 @@ def delete_numbers(s):
     return new_s
 
 
-def city_exists(city):
-    # Initialising boolean and list response
-    city_exists = False
+def city_exists(city_name):
     similar_cities = {}
 
-    # Cutting the city name to the first number and applying title case
-    city_modified = delete_numbers(city).upper()
+    # Uppercase city name cut to the first number
+    city_name = delete_numbers(city_name).upper()
 
-    # Looking for the city in the city list
-    for city_name in FRENCH_CITIES:
-        concordance_score = fuzz.ratio(city_name, city_modified)
-        if concordance_score == 100:
-            city_exists = True
-        if concordance_score >= 70:
-            similar_cities[city_name] = concordance_score
+    # Find 5 most similar cities as a sorted (city, concordance_score) list
+    similar_cities = process.extract(city_name, FRENCH_CITIES, limit=5, scorer=fuzz.ratio)
 
-    # Sorting the similar_cities dict by score
-    similar_cities = sorted(similar_cities.items(), key=operator.itemgetter(1), reverse=True)
-    # Keeping just the 5 cities that matched the most
-    similar_cities = similar_cities[:5]
-    # Correct city name is the city with the highest score
     city_modified = similar_cities[0][0]
+    # The city exists if the best score is 100
+    city_exists = similar_cities[0][1] == 100
 
     return city_exists, city_modified, similar_cities

@@ -11,8 +11,8 @@ angular.module('myApp.results', ['myApp.scanService'])
         $scope.birthCityExists = $scope.scanData.data.birth_place_exists;
         $scope.convertedBirthPlace = $scope.scanData.data.birth_place_corrected;
         $scope.similarBirthCities = $scope.scanData.data.birth_place_similar;
-        $scope.extractedImgUrl = "http://localhost:5000/" + $scope.scanData.image_path;
-        $scope.excelDataUrl = "http://localhost:5000" + $scope.scanData.excel_data_path;
+        $scope.extractedImgUrl = "/" + $scope.scanData.image_path;
+        $scope.excelDataUrl = "/" + $scope.scanData.excel_data_path;
 
         if (Object.keys($scope.similarBirthCities).length !== 0){
             console.log('Similar birth cities with their associated score : ' + $scope.similarBirthCities)
