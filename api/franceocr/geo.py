@@ -6,7 +6,7 @@ from fuzzywuzzy import fuzz, process
 from franceocr.config import BASEDIR
 
 
-with open(BASEDIR + '/french_cities.txt', 'r') as f:
+with open(BASEDIR + '/french_cities.txt', 'r', encoding="UTF-8") as f:
     FRENCH_CITIES = [city.replace("\n", "") for city in f.readlines()]
 
 
