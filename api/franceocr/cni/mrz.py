@@ -73,9 +73,11 @@ def extract_mrz(image):
     # perform another closing operation, this time using the square
     # kernel to close gaps between lines of the MRZ, then perform a
     # series of erosions to break apart connected components
-    thresh = cv2.erode(thresh, None, iterations=2)
-    mrzClosingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (27, 80))
+    # thresh = cv2.erode(thresh, None, iterations=2)
+    # DEBUG_display_image(thresh, "After")
+    mrzClosingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 60))
     thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, mrzClosingKernel)
+    DEBUG_display_image(thresh, "After")
     erodeKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (6, 6))
     thresh = cv2.erode(thresh, erodeKernel, iterations=4)
 
@@ -109,7 +111,8 @@ def extract_mrz(image):
 
         # check to see if the aspect ratio and coverage width are within
         # acceptable criteria
-        if 7 <= ar <= 15 and crWidth > 0.7:
+        # expected_aspect_ratio = 93.3 / (17.9 - 7.25)
+        if 7 <= ar and crWidth > 0.7:
             # pad the bounding box since we applied erosions and now need
             # to re-grow it
             pX = int((x + w) * 0.04)
@@ -140,6 +143,8 @@ def read_mrz(image):
     mrz_data = ocr_cni_mrz(image)
     mrz_data = mrz_data.replace(' ', '')
     mrz_data = mrz_data.split('\n')
+
+    logging.debug("MRZ data: %s", mrz_data)
 
     if len(mrz_data) != 2:
         raise InvalidOCRException(
@@ -186,8 +191,6 @@ def mrz_to_dict(mrz_data):
         )
 
     line1, line2 = mrz_data
-
-    logging.debug("MRZ data: %s", mrz_data)
 
     values = {
         "id": line1[0:2],

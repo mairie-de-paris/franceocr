@@ -1,4 +1,3 @@
-import operator
 import re
 
 from fuzzywuzzy import fuzz, process
@@ -12,11 +11,7 @@ with open(BASEDIR + '/french_cities.txt', 'r', encoding="UTF-8") as f:
 
 def delete_numbers(s):
     # Cutting at the first number
-    new_s = re.split('(\d+)', s)[0]
-
-    # Removing the last space character
-    if new_s[-1] == ' ':
-        new_s = new_s[:-1]
+    new_s = re.split('(\d+)', s)[0].strip()
 
     return new_s
 

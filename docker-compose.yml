@@ -14,8 +14,12 @@ services:
         volumes:
             - api-data:/uploads:rw
             - api-logs:/logs:rw
+        depends_on:
+            - db
+        links:
+            - db:db
         ports:
-            - "127.0.0.1:5000:5000"
+            - "127.0.0.1:5000:8000"
         restart: always
 
 volumes:
