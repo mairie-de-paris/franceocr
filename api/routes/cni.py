@@ -12,7 +12,7 @@ from franceocr.exceptions import ImageProcessingException, InvalidOCRException
 from database import mongo
 from excel_export import fill_new_line
 from exceptions import InvalidUsageException
-from utils import allowed_file
+from utils import allowed_file, to_json
 
 cni_blueprint = Blueprint('cni', __name__)
 
@@ -83,4 +83,4 @@ def cni_scan():
 
     mongo.db.cni.insert(result)
 
-    return jsonify(result)
+    return to_json(result)

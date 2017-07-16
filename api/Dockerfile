@@ -34,5 +34,5 @@ COPY . /app
 
 USER python
 
-EXPOSE 5000
-ENTRYPOINT ["gunicorn", "--config", "/app/gunicorn.conf", "--log-config", "/app/logging.conf", "-b", ":5000", "server:server"]
+EXPOSE 8000
+ENTRYPOINT ["gunicorn", "--config", "/app/gunicorn.conf", "--log-config", "/app/logging.conf", "-b", ":8000", "server:server"]

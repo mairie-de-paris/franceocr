@@ -1,5 +1,7 @@
+import json
 import requests
 
+from bson import json_util
 from io import BytesIO
 from PIL import Image
 
@@ -16,3 +18,7 @@ def get_image_from_url(url):
 
 def allowed_file(file):
     return file.mimetype in ALLOWED_MIME
+
+
+def to_json(data):
+    return json.dumps(data, default=json_util.default)
