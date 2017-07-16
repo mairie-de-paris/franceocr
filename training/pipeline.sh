@@ -3,8 +3,8 @@ rm -rf franceocr_from_eng/
 mkdir -p franceocr_from_eng/
 
 # Add tif/box pairs to lang data
-cp franceocrdata/eng.franceocr*.tif langdata/eng/
-cp franceocrdata/eng.franceocr*.box langdata/eng/
+cp franceocrdata/* langdata/eng/
+# cp eng.franceocr.exp0.{box,tif} langdata/eng/
 
 # Generate training data (lstmf files)
 ../../tesseract/training/tesstrain.sh \
@@ -12,7 +12,7 @@ cp franceocrdata/eng.franceocr*.box langdata/eng/
     --langdata_dir langdata \
     --linedata_only \
     --noextract_font_properties \
-    --fontlist "DejaVu Sans" \
+    --fontlist "DejaVu Sans" "OCRB" \
     --output_dir franceocr_from_eng \
     --training_text langdata/eng/franceocr.training_text \
     --exposures "0"

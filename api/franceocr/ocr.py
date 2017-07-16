@@ -30,7 +30,7 @@ def ocr_cni(image):
     ocr_result = ocr(
         image,
         "franceocr",
-        "--oem 2 " + BASEDIR + "/tessconfig/cni"
+        "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni"
     )
 
     return ocr_result \
@@ -42,7 +42,7 @@ def ocr_cni_birth_date(image):
     ocr_result = ocr(
         image,
         "franceocr",
-        "--oem 2 " + BASEDIR + "/tessconfig/cni-birth_date"
+        "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni-birth_date"
     )
 
     return ocr_result.replace(" ", "").replace(',', '').replace('.', '')
@@ -52,14 +52,25 @@ def ocr_cni_birth_place(image):
     ocr_result = ocr(
         image,
         "franceocr",
-        "--oem 2 " + BASEDIR + "/tessconfig/cni-birth_place"
+        "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni-birth_place"
     )
 
-    return re.sub(
-        r'\(.*\)',
-        '',
+    no_brackets = re.sub(
+        r"\(.*\)",
+        "",
         ocr_result
-    ).strip()
+    )
+
+    only_alphanum = re.sub(
+        r"[^a-zA-Z0-9' \-]",
+        "",
+        no_brackets
+    )
+
+    return only_alphanum \
+        .lstrip(":") \
+        .lstrip("'") \
+        .strip()
 
 
 def ocr_cni_mrz(image):
