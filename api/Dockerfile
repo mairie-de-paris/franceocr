@@ -33,5 +33,6 @@ COPY OCRB.traineddata $TESSDATA_PREFIX
 COPY . /app
 
 USER python
+
 EXPOSE 5000
-ENTRYPOINT ["gunicorn", "--log-config", "/app/logging.conf", "-b", ":5000", "server:server"]
+ENTRYPOINT ["gunicorn", "--config", "/app/gunicorn.conf", "--log-config", "/app/logging.conf", "-b", ":5000", "server:server"]

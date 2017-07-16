@@ -7,13 +7,13 @@ import os.path
 from skimage.feature import match_template
 
 from franceocr.cni.mrz import process_cni_mrz
-from franceocr.config import IMAGE_HEIGHT, IMAGE_RATIO
+from franceocr.config import IMAGE_WIDTH
 from franceocr.detection import is_extracted
 from franceocr.exceptions import ImageProcessingException
 from franceocr.extraction import extract_document, improve_bbox_image, improve_image
 from franceocr.geo import city_exists
 from franceocr.ocr import ocr_cni, ocr_cni_birth_date, ocr_cni_birth_place
-from franceocr.utils import DEBUG_display_image
+from franceocr.utils import DEBUG_display_image, INFO_display_image
 
 
 def cni_locate_zones(image, improved):
@@ -22,54 +22,55 @@ def cni_locate_zones(image, improved):
     Requires both the original image and the improved image.
     """
 
-    image = imutils.resize(image, height=IMAGE_HEIGHT)
+    image = imutils.resize(image, width=IMAGE_WIDTH)
     if len(image.shape) == 3 and image.shape[2] == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite("template.png", image)
 
-    improved = imutils.resize(improved, height=IMAGE_HEIGHT)
+    improved = imutils.resize(improved, width=IMAGE_WIDTH)
     if len(improved.shape) == 3 and improved.shape[2] == 3:
         improved = cv2.cvtColor(improved, cv2.COLOR_BGR2GRAY)
 
     zones = {
         "last_name": {
-            "width": 450,
-            "height": 42,
-            "offset_x": 0,
-            "offset_y": -6,
-            "after_x": 260,
-            "before_x": 510,
-            "after_y": 110,
-            "before_y": 210,
+            "width": 700,
+            "height": 60,
+            "offset_x": -6,
+            "offset_y": 0,
+            "after_x": 320,
+            "before_x": 410,
+            "after_y": 120,
+            "before_y": 200,
         },
         "first_name": {
-            "width": 450,
-            "height": 42,
+            "width": 700,
+            "height": 60,
             "offset_x": 0,
-            "offset_y": -2,
-            "after_x": 260,
-            "before_x": 510,
-            "after_y": 165,
-            "before_y": 265,
+            "offset_y": 0,
+            "after_x": 320,
+            "before_x": 480,
+            "after_y": 200,
+            "before_y": 280,
         },
         "birth_date": {
             "width": 280,
-            "height": 42,
+            "height": 60,
             "offset_x": 0,
-            "offset_y": -5,
-            "after_x": 500,
-            "before_x": 800,
-            "after_y": 240,
-            "before_y": 340,
+            "offset_y": 5,
+            "after_x": 720,
+            "before_x": 900,
+            "after_y": 330,
+            "before_y": 430,
         },
         "birth_place": {
-            "width": 450,
-            "height": 42,
+            "width": 700,
+            "height": 60,
             "offset_x": 0,
-            "offset_y": 22,
-            "after_x": 260,
-            "before_x": 510,
-            "after_y": 245,
-            "before_y": 345,
+            "offset_y": 50,
+            "after_x": 350,
+            "before_x": 475,
+            "after_y": 330,
+            "before_y": 560,
         },
     }
 
@@ -78,16 +79,11 @@ def cni_locate_zones(image, improved):
             os.path.dirname(__file__) + "/../templates/cni-" + zone + ".png", 0
         )
         templateH, templateW = template.shape
-        template = imutils.resize(
-            template,
-            height=int(templateH * IMAGE_RATIO)
-        )
-        templateH, templateW = template.shape
 
-        xMin = int(zones[zone]["after_x"] * IMAGE_RATIO)
-        xMax = int(zones[zone]["before_x"] * IMAGE_RATIO)
-        yMin = int(zones[zone]["after_y"] * IMAGE_RATIO)
-        yMax = int(zones[zone]["before_y"] * IMAGE_RATIO)
+        xMin = int(zones[zone]["after_x"])
+        xMax = int(zones[zone]["before_x"]) + templateW
+        yMin = int(zones[zone]["after_y"])
+        yMax = int(zones[zone]["before_y"]) + templateH
 
         DEBUG_display_image(image[yMin:yMax, xMin:xMax], "RoI", resize=False)
 
@@ -99,10 +95,10 @@ def cni_locate_zones(image, improved):
         y += yMin
 
         bbox = (
-            x + templateW + int(zones[zone]["offset_x"] * IMAGE_RATIO),
-            y + int(zones[zone]["offset_y"] * IMAGE_RATIO),
-            int(zones[zone]["width"] * IMAGE_RATIO),
-            int(zones[zone]["height"] * IMAGE_RATIO)
+            x + templateW + int(zones[zone]["offset_x"]),
+            y + int(zones[zone]["offset_y"]),
+            int(zones[zone]["width"]),
+            int(zones[zone]["height"])
         )
 
         # if zone == "birth_date":
@@ -112,6 +108,8 @@ def cni_locate_zones(image, improved):
 
         # if zone == "birth_place":
         cropped = improve_bbox_image(cropped)
+
+        DEBUG_display_image(cropped, "Cropped", resize=False)
 
         zones[zone]["bbox"] = bbox
         zones[zone]["image"] = cropped
@@ -128,10 +126,7 @@ def cni_read_zones(zones):
         image = zones[zone]["image"]
 
         if zone == "birth_date":
-            birth_date = ocr_cni_birth_date(image)
-            birth_date = birth_date.replace(',', '')
-            birth_date = birth_date.replace('.', '')
-            zones[zone]["value"] = birth_date
+            zones[zone]["value"] = ocr_cni_birth_date(image)
         elif zone == "birth_place":
             zones[zone]["value"] = ocr_cni_birth_place(image)
         else:
@@ -173,7 +168,7 @@ def cni_process(image):
         ) from ex
 
     zones = cni_read_zones(zones)
-    mrz_data = process_cni_mrz(extracted)
+    mrz_data = process_cni_mrz(extracted, improved)
     birth_place_exists, birth_place_corrected, similar_birth_places = city_exists(zones["birth_place"]["value"])
 
     return {

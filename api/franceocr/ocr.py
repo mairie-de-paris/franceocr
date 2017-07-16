@@ -45,7 +45,7 @@ def ocr_cni_birth_date(image):
         "--oem 2 " + BASEDIR + "/tessconfig/cni-birth_date"
     )
 
-    return ocr_result.replace(" ", "")
+    return ocr_result.replace(" ", "").replace(',', '').replace('.', '')
 
 
 def ocr_cni_birth_place(image):

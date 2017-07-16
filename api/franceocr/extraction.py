@@ -8,7 +8,7 @@ from skimage.exposure import equalize_hist
 from skimage.morphology import closing
 from imutils.perspective import four_point_transform, order_points
 
-from franceocr.config import IMAGE_HEIGHT
+from franceocr.config import IMAGE_WIDTH
 from franceocr.utils import (
     DEBUG_display_image,
     INFO_display_image,
@@ -59,9 +59,9 @@ def find_significant_contours(edged_image, ratio=0.05, approx=False):
 
 def extract_document(image):
     orig = image.copy()
-    orig_ratio = image.shape[0] / IMAGE_HEIGHT
+    orig_ratio = image.shape[1] / IMAGE_WIDTH
 
-    image = imutils.resize(image, height=IMAGE_HEIGHT)
+    image = imutils.resize(image, width=IMAGE_WIDTH)
 
     # === Beginning of the pass 0 of the extraction === #
     # Use edges to find a first approximation of the document
@@ -96,7 +96,7 @@ def extract_document(image):
     if 0.62 <= extracted_ratio <= 1.6:
         orig = four_point_transform(orig, bbox.reshape(4, 2) * orig_ratio)
     else:
-        image = imutils.resize(orig, height=IMAGE_HEIGHT)
+        image = imutils.resize(orig, width=IMAGE_WIDTH)
 
     # === End of the pass 0 of the extraction === #
     # === Beginning of the first pass of the extraction === #
@@ -194,8 +194,8 @@ def extract_document(image):
         edged = edge_detect(image)
         edged = np.asarray(edged, np.uint8)
 
-        # First line from the 8/10s
-        yMin = int(edged.shape[0] * 8 / 10)
+        # First line from the 9/10s
+        yMin = int(edged.shape[0] * 9 / 10)
         totals = np.sum(edged[yMin:], axis=1)
         totals[totals <= np.percentile(totals, 90)] = 0
         # totals[totals >= np.percentile(totals, 99)] = 0
@@ -221,7 +221,7 @@ def extract_document(image):
 
 
 def improve_image(image):
-    image = imutils.resize(image, height=IMAGE_HEIGHT)
+    image = imutils.resize(image, width=IMAGE_WIDTH)
 
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     image = cv2.GaussianBlur(image, (5, 5), 0)
@@ -314,7 +314,7 @@ def compute_skew(image):
     Works by finding strong lines in the image and
     FIXME improve accuracy ?
     """
-    image = imutils.resize(image, height=IMAGE_HEIGHT)
+    image = imutils.resize(image, width=IMAGE_WIDTH)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(image, (3, 3), 0)
     gray = cv2.bitwise_not(blurred)

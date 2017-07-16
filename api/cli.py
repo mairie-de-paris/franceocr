@@ -1,7 +1,17 @@
 import cv2
+import logging
 import sys
 
 from franceocr import cni_process
+
+root = logging.getLogger()
+root.setLevel(logging.DEBUG)
+
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+root.addHandler(ch)
 
 IMAGES = {
     "Background": [
@@ -31,7 +41,7 @@ IMAGES = {
         "/home/till034/enpc/PEP/franceocr_data/uploads/6a666862-4898-48e3-9bc2-55eb563c21f1.JPG",
         "/home/till034/enpc/PEP/franceocr_data/uploads/92b3321d-6070-4b01-a660-4b64fba970e8.jpg",
         "/home/till034/enpc/PEP/franceocr_data/uploads/f3a66b8c-a523-4c8e-b513-417e8dd42b43.jpg",
-        "/home/till034/enpc/PEP/franceocr_data/uploads/95a42e42-6ca8-4466-bd50-3f694c9dc4c6.JPG",
+        # "/home/till034/enpc/PEP/franceocr_data/uploads/95a42e42-6ca8-4466-bd50-3f694c9dc4c6.JPG",
         "/home/till034/enpc/PEP/franceocr_data/uploads/16ec1d5d-ba82-40f3-bfd2-5cc47a1fa86c.png",
         "/home/till034/enpc/PEP/franceocr_data/uploads/a07f06bb-9ece-400f-a3b7-a71f27d7532e.JPG",
         "/home/till034/enpc/PEP/franceocr_data/uploads/9be42e69-15c5-45b4-9e38-1ebfcd16fcff.JPG",
@@ -70,8 +80,12 @@ if __name__ == "__main__":
             image = cv2.imread(image_path)
             tries += 1
             try:
-                print(cni_process(image))
+                cni_data = cni_process(image)
                 successes += 1
+                print("last_name_ocr", cni_data["last_name_ocr"])
+                print("first_name_ocr", cni_data["first_name_ocr"])
+                print("birth_date_ocr", cni_data["birth_date_ocr"])
+                print("birth_place_ocr", cni_data["birth_place_ocr"])
             except Exception as ex:
                 print("Error: {}".format(ex))
 

@@ -5,9 +5,8 @@ import numpy as np
 
 from skimage.filters import threshold_local
 
-from franceocr.config import IMAGE_HEIGHT
 from franceocr.cni.exceptions import InvalidChecksumException, InvalidMRZException
-from franceocr.exceptions import ImageProcessingException, InvalidOCRException
+from franceocr.exceptions import ImageProcessingException
 from franceocr.extraction import find_significant_contours
 from franceocr.ocr import ocr_cni_mrz
 from franceocr.utils import DEBUG_display_image, INFO_display_image
@@ -35,13 +34,13 @@ def checksum_mrz(string):
     return result % 10
 
 
-def extract_mrz(image):
+def cni_mrz_extract(image, improved):
     """Find and exctract the MRZ region from a CNI image.
 
     FIXME comments
     """
     # resize the image, and convert it to grayscale
-    image = imutils.resize(image, height=IMAGE_HEIGHT)
+    image = imutils.resize(image, width=900)
     if len(image.shape) == 3 and image.shape[2] == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -75,7 +74,7 @@ def extract_mrz(image):
     # series of erosions to break apart connected components
     # thresh = cv2.erode(thresh, None, iterations=2)
     # DEBUG_display_image(thresh, "After")
-    mrzClosingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 60))
+    mrzClosingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (12, 45))
     thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, mrzClosingKernel)
     DEBUG_display_image(thresh, "After")
     erodeKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (6, 6))
@@ -115,17 +114,20 @@ def extract_mrz(image):
         if 7 <= ar and crWidth > 0.7:
             # pad the bounding box since we applied erosions and now need
             # to re-grow it
-            pX = int((x + w) * 0.04)
-            pY = int((y + h) * 0.05)
-            (x, y) = (x - pX, y - pY)
-            (w, h) = (w + (pX * 2), h + (pY * 2))
+            pX = (x + w) * 0.04
+            pY = (y + h) * 0.06
+
+            x = int((x - pX))
+            y = int((y - pY))
+            w = int((w + (pX * 2)))
+            h = int((h + (pY * 2)))
 
             # extract the ROI from the image and draw a bounding box
             # surrounding the MRZ
             mrz_image = image[y:y + h, x:x + w].copy()
             break
 
-    DEBUG_display_image(image)
+    INFO_display_image(image)
 
     # Further improve MRZ image quality
     thresh = threshold_local(mrz_image, 35, offset=13)
@@ -137,38 +139,48 @@ def extract_mrz(image):
     return mrz_image
 
 
-def read_mrz(image):
+def cni_mrz_read(image):
     """Read the extracted MRZ image to a list of two 36-chars strings."""
 
     mrz_data = ocr_cni_mrz(image)
     mrz_data = mrz_data.replace(' ', '')
     mrz_data = mrz_data.split('\n')
+    mrz_data = list(filter(None, mrz_data))
 
     logging.debug("MRZ data: %s", mrz_data)
-
-    if len(mrz_data) != 2:
-        raise InvalidOCRException(
-            "Expected 2 lines, got {}".format(len(mrz_data))
-        )
-
-    if len(mrz_data[0]) != 36:
-        raise InvalidOCRException(
-            "Expected line 0 to be 36-chars long, is {}".format(
-                len(mrz_data[0])
-            )
-        )
-
-    if len(mrz_data[1]) != 36:
-        raise InvalidOCRException(
-            "Expected line 1 to be 36-chars long, is {}".format(
-                len(mrz_data[1])
-            )
-        )
 
     return mrz_data
 
 
-def mrz_to_dict(mrz_data):
+def mrz_read_number(text):
+    text = text \
+        .replace('O', '0') \
+        .replace('S', '5') \
+        .replace('B', '8')
+
+    return text
+
+
+def mrz_read_last_name(text):
+    return text.rstrip('<')
+
+
+def mrz_read_first_name(text):
+    return [first_name.replace('<', '-') for first_name in text.rstrip('<').split('<<')]
+
+
+def mrz_read_sex(text):
+    sex = text
+
+    if sex not in ('M', 'F'):
+        raise InvalidMRZException(
+            "Expected sex M/F lines, got {}".format(sex)
+        )
+
+    return sex
+
+
+def cni_mrz_to_dict(mrz_data):
     """Extract human-readable data from the MRZ strings."""
 
     if len(mrz_data) != 2:
@@ -192,23 +204,35 @@ def mrz_to_dict(mrz_data):
 
     line1, line2 = mrz_data
 
+    IS_NUMBER = [
+        (0, 4),
+        (7, 13),
+        (27, 34),
+        (35, 36),
+    ]
+
+    for start, end in IS_NUMBER:
+        line2 = line2[:start] + mrz_read_number(line2[start:end]) + line2[end:]
+
+    logging.debug("Clean MRZ data: %s", (line1, line2))
+
     values = {
         "id": line1[0:2],
         "country": line1[2:5],
-        "last_name": line1[5:30].rstrip("<"),
+        "last_name": mrz_read_last_name(line1[5:30]),
         "adm_code": line1[30:36],
-        "emit_year": line2[0:2],
-        "emit_month": line2[2:4],
+        "emit_year": int(line2[0:2]),
+        "emit_month": int(line2[2:4]),
         "adm_code2": line2[4:7],
-        "emit_code": line2[7:12],
-        "checksum_emit": line2[12],
-        "first_name": [first_name.replace("<", "-") for first_name in line2[13:27].rstrip("<").split("<<")],
-        "birth_year": line2[27:29],
-        "birth_month": line2[29:31],
-        "birth_day": line2[31:33],
-        "checksum_birth": line2[33],
-        "sex": line2[34],
-        "checksum": line2[35],
+        "emit_code": int(line2[7:12]),
+        "checksum_emit": int(line2[12]),
+        "first_name": mrz_read_first_name(line2[13:27]),
+        "birth_year": int(line2[27:29]),
+        "birth_month": int(line2[29:31]),
+        "birth_day": int(line2[31:33]),
+        "checksum_birth": int(line2[33]),
+        "sex": mrz_read_sex(line2[34]),
+        "checksum": int(line2[35]),
     }
 
     if values["id"] != "ID":
@@ -218,16 +242,15 @@ def mrz_to_dict(mrz_data):
 
     # assert(values["adm_code2"] == values["adm_code"][0:3])
 
-    # FIXME protect against type-cast exception
-    if checksum_mrz(line2[0:12]) != int(values["checksum_emit"]):
+    if checksum_mrz(line2[0:12]) != values["checksum_emit"]:
         raise InvalidChecksumException(
             "Invalid emit checksum"
         )
-    if checksum_mrz(line2[27:33]) != int(values["checksum_birth"]):
+    if checksum_mrz(line2[27:33]) != values["checksum_birth"]:
         raise InvalidChecksumException(
             "Invalid birth_date checksum"
         )
-    if checksum_mrz(line1 + line2[:-1]) != int(values["checksum"]):
+    if checksum_mrz(line1 + line2[:-1]) != values["checksum"]:
         raise InvalidChecksumException(
             "Invalid global checksum"
         )
@@ -235,13 +258,13 @@ def mrz_to_dict(mrz_data):
     return values
 
 
-def process_cni_mrz(image):
+def process_cni_mrz(image, improved):
     try:
-        mrz_image = extract_mrz(image)
+        mrz_image = cni_mrz_extract(image, improved)
     except Exception as ex:
         logging.debug("MRZ extraction failed", exc_info=True)
         raise ImageProcessingException("MRZ extraction failed") from ex
 
-    mrz_data = read_mrz(mrz_image)
+    mrz_data = cni_mrz_read(mrz_image)
 
-    return mrz_to_dict(mrz_data)
+    return cni_mrz_to_dict(mrz_data)
