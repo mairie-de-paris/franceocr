@@ -2,6 +2,13 @@
 <div class="upload-controls-fadeout" ng-show="!loading">
     <div class="col-sm-6">
         <h3>Scanner une nouvelle image</h3><br>
+        <ul>
+            <li>avec le <strong>moins d'angle</strong> possible, le téléphone bien au dessus de la carte</li>
+            <li>sur un <strong>fond uni</strong>, idéalement blanc ou de couleur claire</li>
+            <li>sans être <strong>trop zoomée</strong> sur la carte (laisser une certaine marge entre le bord de la carte
+                et le bord de la photo)</li>
+        </ul>
+        <br>
         <div class="fileUpload btn btn-primary">
             <span>Sélectionner l'image ou utiliser la caméra du téléphone</span>
             <input type="file" class="upload" ng-file-select="onFileSelect($files)"/>
