@@ -9,3 +9,4 @@ This software is an order from Mairie de Paris to Ponts Études Projets, the jun
 ## Contributors
 
 * [Louis Trezzini](https://github.com/LouisTrezzini/)
+* [Basile Nouvellet](https://github.com/BasileNouvellet/)
