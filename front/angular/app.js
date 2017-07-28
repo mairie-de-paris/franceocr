@@ -33,6 +33,6 @@ angular.module('myApp', [
                     controller: 'ResultsController'})
             .otherwise({redirectTo: '/home'});
 
-        // Disable loading bar spinner
+        // Enable loading bar spinner
         cfpLoadingBarProvider.includeSpinner = true;
     });

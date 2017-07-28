@@ -33,7 +33,8 @@ angular.module('myApp.upload', ['angularFileUpload', 'myApp.scanService'])
                         console.log(data);
                         scanService.setScanData(data);
                         $scope.loading = false;
-                        $window.location.href = "#/results";
+                        //$window.location.href = "#/results";
+                        $window.location.assign("#/results");
 
                     }).error(function(er) {
                         // file is not uploaded or scanned successfully
@@ -46,7 +47,8 @@ angular.module('myApp.upload', ['angularFileUpload', 'myApp.scanService'])
                         $scope.errorMessage = er.message;
                         scanService.refuseScanData();
                         $scope.loading = false;
-                        $window.location.href = "#/upload";
+                        //$window.location.href = "#/upload";
+                        $window.location.assign("#/upload");
                     });
                 //.then(success, error, progress);
                 // access or attach event listeners to the underlying XMLHttpRequest.
