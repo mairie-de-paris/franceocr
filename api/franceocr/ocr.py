@@ -1,5 +1,3 @@
-import pyocr
-import pyocr.builders
 import pytesseract
 import re
 
@@ -13,17 +11,24 @@ def ocr(image, lang="fra", config=None):
     return pytesseract.image_to_string(image, lang=lang, config=config)
 
 
-def ocr2(image, lang="fra", config=None):
-    image = Image.fromarray(image)
-    tools = pyocr.get_available_tools()
-    # The tools are returned in the recommended order of usage
-    tool = tools[1]
+def ocr_read_number(text):
+    text = text \
+        .replace('O', '0') \
+        .replace('I', '1') \
+        .replace('S', '5') \
+        .replace('B', '8')
 
-    return tool.image_to_string(
-        image,
-        lang=lang,
-        builder=pyocr.builders.TextBuilder()
-    )
+    return text
+
+
+def ocr_read_text(text):
+    text = text \
+        .replace('0', 'O') \
+        .replace('1', 'I') \
+        .replace('5', 'S') \
+        .replace('8', 'B')
+
+    return text
 
 
 def ocr_cni(image):
@@ -35,6 +40,7 @@ def ocr_cni(image):
 
     return ocr_result \
         .lstrip(":") \
+        .replace(",", "") \
         .strip()
 
 
@@ -45,7 +51,12 @@ def ocr_cni_birth_date(image):
         "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni-birth_date"
     )
 
-    return ocr_result.replace(" ", "").replace(',', '').replace('.', '')
+    ocr_result = ocr_read_number(ocr_result)
+
+    return ocr_result \
+        .replace(' ', '') \
+        .replace(',', '') \
+        .replace('.', '')
 
 
 def ocr_cni_birth_place(image):

@@ -38,9 +38,9 @@ def cni_locate_zones(image, improved):
             "offset_x": -6,
             "offset_y": -4,
             "after_x": 320,
-            "before_x": 410,
-            "after_y": 120,
-            "before_y": 200,
+            "before_x": 440,
+            "after_y": 110,
+            "before_y": 220,
         },
         "first_name": {
             "width": 700,
@@ -48,9 +48,9 @@ def cni_locate_zones(image, improved):
             "offset_x": 0,
             "offset_y": 0,
             "after_x": 320,
-            "before_x": 480,
-            "after_y": 200,
-            "before_y": 280,
+            "before_x": 510,
+            "after_y": 180,
+            "before_y": 310,
         },
         "birth_date": {
             "width": 280,
@@ -58,9 +58,9 @@ def cni_locate_zones(image, improved):
             "offset_x": -8,
             "offset_y": 5,
             "after_x": 720,
-            "before_x": 900,
-            "after_y": 330,
-            "before_y": 430,
+            "before_x": 920,
+            "after_y": 310,
+            "before_y": 450,
         },
         "birth_place": {
             "width": 700,
@@ -68,9 +68,9 @@ def cni_locate_zones(image, improved):
             "offset_x": 0,
             "offset_y": 48,
             "after_x": 350,
-            "before_x": 475,
-            "after_y": 330,
-            "before_y": 560,
+            "before_x": 500,
+            "after_y": 310,
+            "before_y": 580,
         },
     }
 
@@ -109,7 +109,7 @@ def cni_locate_zones(image, improved):
         # if zone == "birth_place":
         cropped = improve_bbox_image(cropped)
 
-        DEBUG_display_image(cropped, "Cropped", resize=False)
+        INFO_display_image(cropped, "Cropped", resize=False)
 
         zones[zone]["bbox"] = bbox
         zones[zone]["image"] = cropped
@@ -169,6 +169,12 @@ def cni_process(image):
 
     zones = cni_read_zones(zones)
     mrz_data = process_cni_mrz(extracted, improved)
+
+    last_name_corrected = mrz_data["last_name"]
+    if len(last_name_corrected) == 25:
+        last_name_corrected += zones["last_name"]["value"][25:]
+    first_name_corrected = mrz_data["first_name"] + zones["first_name"]["value"][len(mrz_data["first_name"]):]
+
     birth_place_exists, birth_place_corrected, similar_birth_places = city_exists(zones["birth_place"]["value"])
 
     return {
@@ -176,11 +182,13 @@ def cni_process(image):
 
         "last_name_mrz": mrz_data["last_name"],
         "last_name_ocr": zones["last_name"]["value"],
+        "last_name_corrected": last_name_corrected,
 
         "first_name_mrz": mrz_data["first_name"],
         "first_name_ocr": zones["first_name"]["value"],
+        "first_name_corrected": first_name_corrected,
 
-        "birth_date_mrz": "{}.{}.{}".format(
+        "birth_date_mrz": "{}{}{}".format(
             mrz_data["birth_day"],
             mrz_data["birth_month"],
             mrz_data["birth_year"],

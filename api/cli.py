@@ -1,5 +1,6 @@
 import cv2
 import logging
+import os
 import sys
 
 from franceocr import cni_process
@@ -52,10 +53,10 @@ IMAGES = {
         "/home/till034/enpc/PEP/franceocr_data/uploads/5eca1695-ecde-4990-b3f9-3acd607f1d09.JPG",
         "/home/till034/enpc/PEP/franceocr_data/uploads/dca14f3b-1514-4ac1-8c45-c2a3824848d3.jpg",
     ],
-    # "Non natural": [
-    #     "/home/till034/enpc/PEP/franceocr_data/uploads/67d5cf9f-d0af-4280-92b2-441f305897a5.JPG",
-    #     "/home/till034/enpc/PEP/franceocr_data/uploads/4932580f-3aa4-4cef-9628-13169d95e4c5.jpg",
-    # ],
+    "Non natural": [
+        "/home/till034/enpc/PEP/franceocr_data/uploads/67d5cf9f-d0af-4280-92b2-441f305897a5.JPG",
+        "/home/till034/enpc/PEP/franceocr_data/uploads/4932580f-3aa4-4cef-9628-13169d95e4c5.jpg",
+    ],
     # "Trash": [
     #     "/home/till034/enpc/PEP/franceocr_data/uploads/c8dfbd8c-730e-4188-bf6d-11e54b7dae92.jpg",
     # ],
@@ -64,6 +65,15 @@ IMAGES = {
     ]
 }
 
+BADS = [
+    "/home/till034/enpc/PEP/franceocr_data/uploads/9be5c95f-bb48-4a9f-ab62-f0912d10f283.jpg",
+    "/home/till034/enpc/PEP/franceocr_data/uploads/35bc212c-34e8-408c-85a7-ded9fe8be7c7.jpg",
+    "/home/till034/enpc/PEP/franceocr_data/uploads/2c6bf620-02f9-46fd-8d97-5bdeabef4938.jpg",
+    "/home/till034/enpc/PEP/franceocr_data/uploads/047566fc-19b7-464f-b712-1c480ed543f7.jpg",
+    "/home/till034/enpc/PEP/franceocr_data/uploads/33accb5a-1fac-4fbe-8744-2e2556ce8af7.jpg",
+    "/home/till034/enpc/PEP/franceocr_data/uploads/f7ff0e2e-927a-4d37-9432-b5bd5004e4a9.jpg",
+]
+
 if __name__ == "__main__":
     """Tool to batch process scanned CNI cards"""
     sys.stdout.write("FranceOCR utility\n")
@@ -71,22 +81,40 @@ if __name__ == "__main__":
     tries = 0
     successes = 0
 
-    for tag in IMAGES:
-        print("======= {} =======".format(tag))
+    # for tag in IMAGES:
+    #     print("======= {} =======".format(tag))
+    #
+    #     for image_path in IMAGES[tag]:
 
-        for image_path in IMAGES[tag]:
+    for index, image_path in enumerate(os.listdir('/home/till034/enpc/PEP/franceocr_data/uploads')):
+        image_path = "/home/till034/enpc/PEP/franceocr_data/uploads/" + image_path
+
+        # if image_path != "/home/till034/enpc/PEP/franceocr_data/uploads/d0b95970-8ec1-4a30-b479-7c6b44b493a7.jpg":
+        #     continue
+
+        if os.path.isfile(image_path):
+
             print("=== {} ===".format(image_path))
 
             image = cv2.imread(image_path)
             tries += 1
+            success = False
             try:
                 cni_data = cni_process(image)
-                successes += 1
+                success = True
                 print("last_name_ocr", cni_data["last_name_ocr"])
+                print("last_name_corrected", cni_data["last_name_corrected"])
                 print("first_name_ocr", cni_data["first_name_ocr"])
+                print("first_name_corrected", cni_data["first_name_corrected"])
                 print("birth_date_ocr", cni_data["birth_date_ocr"])
                 print("birth_place_ocr", cni_data["birth_place_ocr"])
+                print("birth_place_corrected", cni_data["birth_place_corrected"])
             except Exception as ex:
+                if image_path in BADS:
+                    success = True
                 print("Error: {}".format(ex))
 
-            print(tries, successes, successes / tries)
+            if success:
+                successes += 1
+
+            print(tries, successes, successes / tries, "SUCCESS" if success else "FAILURE")

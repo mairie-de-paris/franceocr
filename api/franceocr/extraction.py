@@ -17,8 +17,8 @@ from franceocr.utils import (
 
 
 def edge_detect(channel):
-    sobelX = cv2.Sobel(channel, cv2.CV_16S, 1, 0)
-    sobelY = cv2.Sobel(channel, cv2.CV_16S, 0, 1)
+    sobelX = cv2.Sobel(channel, cv2.CV_16S, 1, 0, ksize=5)
+    sobelY = cv2.Sobel(channel, cv2.CV_16S, 0, 1, ksize=5)
     sobel = np.hypot(sobelX, sobelY)
 
     return sobel
@@ -58,49 +58,50 @@ def find_significant_contours(edged_image, ratio=0.05, approx=False):
 
 
 def extract_document(image):
+    orig0 = image.copy()
     orig = image.copy()
-    orig_ratio = image.shape[1] / IMAGE_WIDTH
-
-    image = imutils.resize(image, width=IMAGE_WIDTH)
-
     # === Beginning of the pass 0 of the extraction === #
     # Use edges to find a first approximation of the document
 
-    blurred = cv2.GaussianBlur(image, (3, 3), 0)
+    orig_ratio = image.shape[1] / IMAGE_WIDTH
+    image = imutils.resize(image, width=IMAGE_WIDTH)
+
+    blurred = cv2.GaussianBlur(image, (5, 5), 0)
     edged = np.max(np.array([
         edge_detect(blurred[:, :, 0]),
         edge_detect(blurred[:, :, 1]),
         edge_detect(blurred[:, :, 2])
     ]), axis=0)
-    mean = np.mean(edged)
+    # edged = cv2.Laplacian()
     # Zero any value that is less than mean. This reduces a lot of noise.
-    edged[edged <= mean] = 0
+    edged[edged <= np.percentile(edged, 70)] = 0
 
     edged_8u = np.asarray(edged, np.uint8)
-    DEBUG_display_image(edged_8u, "Edged")
+    INFO_display_image(edged_8u, "Edged")
 
     # Find contours
-    significant = find_significant_contours(edged_8u)  # , approx=True)
+    significant = find_significant_contours(edged_8u, approx=True)
 
     # Perspective correction ?
     bbox = significant[0]
     if len(bbox) != 4:
-        bbox = cv2.boxPoints(cv2.minAreaRect(bbox))
+        bbox = cv2.boxPoints(cv2.minAreaRect(cv2.convexHull(bbox)))
         bbox = np.int0(bbox)
 
     image = four_point_transform(image, bbox.reshape(4, 2))
-    DEBUG_display_image(image, "Extracted0")
+    INFO_display_image(image, "Extracted0")
 
-    extracted_ratio = image.shape[1] / image.shape[0]
-    print(extracted_ratio)
-    if 0.62 <= extracted_ratio <= 1.6:
+    extracted_ar = image.shape[1] / image.shape[0]
+    print(extracted_ar)
+    if 0.65 <= extracted_ar <= 0.75 or 1.35 <= extracted_ar <= 1.45:
         orig = four_point_transform(orig, bbox.reshape(4, 2) * orig_ratio)
-    else:
-        image = imutils.resize(orig, width=IMAGE_WIDTH)
 
     # === End of the pass 0 of the extraction === #
     # === Beginning of the first pass of the extraction === #
     # Finds the blue header of the CNI to improve the extraction
+
+    orig_ratio = orig.shape[1] / IMAGE_WIDTH
+    image = imutils.resize(orig, width=IMAGE_WIDTH)
 
     image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     lower_blue = np.array([210 / 2, 100, 40])
@@ -148,6 +149,10 @@ def extract_document(image):
         bbox = (image.shape[1], image.shape[0]) - bbox
 
     bbox = order_points(bbox)
+
+    horizontal_factor = 1.03
+    bbox[0], bbox[1] = bbox[1] + horizontal_factor * (bbox[0] - bbox[1]), bbox[0] + horizontal_factor * (bbox[1] - bbox[0])
+    bbox[3], bbox[2] = bbox[2] + horizontal_factor * (bbox[3] - bbox[2]), bbox[3] + horizontal_factor * (bbox[2] - bbox[3])
 
     HEADER_TO_BODY = 1600 / 125
     right_vector = bbox[2] - bbox[1]
@@ -206,7 +211,7 @@ def extract_document(image):
         if y0 == yMin:
             y0 = edged.shape[0]
 
-        cv2.line(edged, (0, y0), (1000, y0), (255, 255, 255), 3)
+        # cv2.line(edged, (0, y0), (1000, y0), (255, 255, 255), 3)
 
         DEBUG_display_image(edged, "Image")
 
@@ -214,7 +219,7 @@ def extract_document(image):
 
     # === End of the second pass of the extraction === #
 
-    INFO_display_image(orig, "Original", alone=False)
+    INFO_display_image(orig0, "Original", alone=False)
     INFO_display_image(output, "Scanned")
 
     return output
@@ -253,7 +258,7 @@ def improve_image(image):
     # Remove pepper
     image = closing(image)
 
-    INFO_display_image(image, "Threshold")
+    INFO_display_image(image, "Improved")
 
     return image
 

@@ -8,7 +8,7 @@ from skimage.filters import threshold_local
 from franceocr.cni.exceptions import InvalidChecksumException, InvalidMRZException
 from franceocr.exceptions import ImageProcessingException
 from franceocr.extraction import find_significant_contours
-from franceocr.ocr import ocr_cni_mrz
+from franceocr.ocr import ocr_cni_mrz, ocr_read_text, ocr_read_number
 from franceocr.utils import DEBUG_display_image, INFO_display_image
 
 
@@ -67,20 +67,19 @@ def cni_mrz_extract(image, improved):
     thresh = cv2.morphologyEx(gradX, cv2.MORPH_CLOSE, closingKernel)
     thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
-    DEBUG_display_image(thresh, "Before")
+    INFO_display_image(thresh, "Before")
 
     # perform another closing operation, this time using the square
     # kernel to close gaps between lines of the MRZ, then perform a
     # series of erosions to break apart connected components
-    # thresh = cv2.erode(thresh, None, iterations=2)
-    # DEBUG_display_image(thresh, "After")
-    mrzClosingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (12, 45))
+    thresh = cv2.erode(thresh, None, iterations=3)
+    DEBUG_display_image(thresh, "After1")
+    mrzClosingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (18, 45))
     thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, mrzClosingKernel)
-    DEBUG_display_image(thresh, "After")
-    erodeKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (6, 6))
-    thresh = cv2.erode(thresh, erodeKernel, iterations=4)
+    INFO_display_image(thresh, "After2")
+    thresh = cv2.erode(thresh, None, iterations=3)
 
-    DEBUG_display_image(thresh, "After")
+    INFO_display_image(thresh, "After3")
 
     # during thresholding, it's possible that border pixels were
     # included in the thresholding, so let's set 5% of the left and
@@ -114,8 +113,8 @@ def cni_mrz_extract(image, improved):
         if 7 <= ar and crWidth > 0.7:
             # pad the bounding box since we applied erosions and now need
             # to re-grow it
-            pX = (x + w) * 0.04
-            pY = (y + h) * 0.06
+            pX = (x + w) * 0.05
+            pY = (y + h) * 0.05
 
             x = int((x - pX))
             y = int((y - pY))
@@ -145,28 +144,20 @@ def cni_mrz_read(image):
     mrz_data = ocr_cni_mrz(image)
     mrz_data = mrz_data.replace(' ', '')
     mrz_data = mrz_data.split('\n')
-    mrz_data = list(filter(None, mrz_data))
+    # FIlter out small strings
+    mrz_data = list(filter(lambda x: len(x) >= 30, mrz_data))
 
     logging.debug("MRZ data: %s", mrz_data)
 
     return mrz_data
 
 
-def mrz_read_number(text):
-    text = text \
-        .replace('O', '0') \
-        .replace('S', '5') \
-        .replace('B', '8')
-
-    return text
-
-
 def mrz_read_last_name(text):
-    return text.rstrip('<')
+    return text.rstrip('<').replace('<', '-')
 
 
 def mrz_read_first_name(text):
-    return [first_name.replace('<', '-') for first_name in text.rstrip('<').split('<<')]
+    return " ".join([first_name.replace('<', '-') for first_name in text.rstrip('<').split('<<')])
 
 
 def mrz_read_sex(text):
@@ -188,12 +179,18 @@ def cni_mrz_to_dict(mrz_data):
             "Expected 2 lines, got {}".format(len(mrz_data))
         )
 
+    if len(mrz_data[0]) > 36 and mrz_data[0][29] == '<' and mrz_data[0][30] != '<':
+        mrz_data[0] = mrz_data[0][:36]
+
     if len(mrz_data[0]) != 36:
         raise InvalidMRZException(
             "Expected line 0 to be 36-chars long, is {}".format(
                 len(mrz_data[0])
             )
         )
+
+    if len(mrz_data[1]) > 36 and mrz_data[1][34] in ('M', 'F', 'H'):
+        mrz_data[1] = mrz_data[1][:36]
 
     if len(mrz_data[1]) != 36:
         raise InvalidMRZException(
@@ -202,19 +199,31 @@ def cni_mrz_to_dict(mrz_data):
             )
         )
 
-    line1, line2 = mrz_data
-
     IS_NUMBER = [
-        (0, 4),
-        (7, 13),
-        (27, 34),
-        (35, 36),
+        (0, 30, 36),
+        (1, 0, 4),
+        (1, 7, 13),
+        (1, 27, 34),
+        (1, 35, 36),
     ]
 
-    for start, end in IS_NUMBER:
-        line2 = line2[:start] + mrz_read_number(line2[start:end]) + line2[end:]
+    for line, start, end in IS_NUMBER:
+        mrz_data[line] = mrz_data[line][:start] + ocr_read_number(mrz_data[line][start:end]) + mrz_data[line][end:]
 
-    logging.debug("Clean MRZ data: %s", (line1, line2))
+    IS_TEXT = [
+        (0, 0, 30),
+        (1, 13, 27),
+    ]
+
+    for line, start, end in IS_TEXT:
+        mrz_data[line] = mrz_data[line][:start] + ocr_read_text(mrz_data[line][start:end]) + mrz_data[line][end:]
+
+    if mrz_data[1][34] == 'H':
+        mrz_data[1] = mrz_data[1][:34] + 'M' + mrz_data[1][35]
+
+    logging.debug("Clean MRZ data: %s", mrz_data)
+
+    line1, line2 = mrz_data
 
     values = {
         "id": line1[0:2],
