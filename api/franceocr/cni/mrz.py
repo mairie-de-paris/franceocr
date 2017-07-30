@@ -4,6 +4,7 @@ import logging
 import numpy as np
 
 from skimage.filters import threshold_local
+from imutils.perspective import four_point_transform
 
 from franceocr.cni.exceptions import InvalidChecksumException, InvalidMRZException
 from franceocr.exceptions import ImageProcessingException
@@ -59,6 +60,8 @@ def cni_mrz_extract(image, improved):
     (minVal, maxVal) = (np.min(gradX), np.max(gradX))
     gradX = (255 * ((gradX - minVal) / (maxVal - minVal))).astype("uint8")
 
+    gradX[:400] = 0
+
     DEBUG_display_image(gradX, "GradX")
 
     # apply a closing operation using the rectangular kernel to close
@@ -66,20 +69,42 @@ def cni_mrz_extract(image, improved):
     closingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (27, 12))
     thresh = cv2.morphologyEx(gradX, cv2.MORPH_CLOSE, closingKernel)
     thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-
-    INFO_display_image(thresh, "Before")
+    DEBUG_display_image(thresh, "Before")
 
     # perform another closing operation, this time using the square
     # kernel to close gaps between lines of the MRZ, then perform a
     # series of erosions to break apart connected components
-    thresh = cv2.erode(thresh, None, iterations=3)
+    openingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (27, 12))
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, openingKernel)
     DEBUG_display_image(thresh, "After1")
-    mrzClosingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (18, 45))
-    thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, mrzClosingKernel)
-    INFO_display_image(thresh, "After2")
-    thresh = cv2.erode(thresh, None, iterations=3)
 
-    INFO_display_image(thresh, "After3")
+    contours = cv2.findContours(
+        thresh,
+        cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE
+    )[-2]
+
+    def patch_data(contour):
+        (x, y, w, h) = cv2.boundingRect(contour)
+        ar = w / h
+        crWidth = w / image.shape[1]
+        return ar, crWidth
+
+    def is_small_patch(contour):
+        ar, crWidth = patch_data(contour)
+        return ar < 5 or crWidth < 0.5
+
+    small_patches = filter(is_small_patch, contours)
+    cv2.fillPoly(thresh, list(small_patches), 0)
+
+    DEBUG_display_image(thresh, "After1bis")
+
+    mrzClosingKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (80, 40))
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, mrzClosingKernel)
+    DEBUG_display_image(thresh, "After2")
+
+    thresh = cv2.erode(thresh, None, iterations=3)
+    DEBUG_display_image(thresh, "After3")
 
     # during thresholding, it's possible that border pixels were
     # included in the thresholding, so let's set 5% of the left and
@@ -92,20 +117,19 @@ def cni_mrz_extract(image, improved):
 
     # loop over the contours
     for contour in contours:
-        # compute the bounding box of the contour and use the contour to
-        # compute the aspect ratio and coverage ratio of the bounding box
-        # width to the width of the image
+        (cx, cy), (w, h), angle = cv2.minAreaRect(cv2.convexHull(contour))
 
-        epsilon = 0.03 * cv2.arcLength(contour, True)
-        contour = cv2.approxPolyDP(contour, epsilon, True)
+        if angle < -10:
+            angle += 90
+            w, h = h, w
+        if angle > 10:
+            angle -= 90
+            w, h = h, w
 
-        # cv2.drawContours(image, [contour], 0, (0,255,0),2, cv2.LINE_AA, maxLevel=1)
-
-        (x, y, w, h) = cv2.boundingRect(contour)
         ar = w / h
         crWidth = w / image.shape[1]
 
-        logging.debug("Aspect Ratio %f Width Ratio %f", ar, crWidth)
+        logging.debug("Aspect Ratio %f Width Ratio %f Angle %f", ar, crWidth, angle)
 
         # check to see if the aspect ratio and coverage width are within
         # acceptable criteria
@@ -113,17 +137,14 @@ def cni_mrz_extract(image, improved):
         if 7 <= ar and crWidth > 0.7:
             # pad the bounding box since we applied erosions and now need
             # to re-grow it
-            pX = (x + w) * 0.05
-            pY = (y + h) * 0.05
-
-            x = int((x - pX))
-            y = int((y - pY))
-            w = int((w + (pX * 2)))
-            h = int((h + (pY * 2)))
+            bbox = cv2.boxPoints(
+                ((cx, cy), (1.12 * w, 1.65 * h), angle)
+            )
 
             # extract the ROI from the image and draw a bounding box
             # surrounding the MRZ
-            mrz_image = image[y:y + h, x:x + w].copy()
+            # mrz_image = image[y:y + h, x:x + w].copy()
+            mrz_image = four_point_transform(image, bbox.reshape(4, 2))
             break
 
     INFO_display_image(image)
@@ -182,6 +203,9 @@ def cni_mrz_to_dict(mrz_data):
     if len(mrz_data[0]) > 36 and mrz_data[0][29] == '<' and mrz_data[0][30] != '<':
         mrz_data[0] = mrz_data[0][:36]
 
+    if len(mrz_data[0]) > 36 and mrz_data[0][-34:-31] == "FRA":
+        mrz_data[0] = mrz_data[0][-36:]
+
     if len(mrz_data[0]) != 36:
         raise InvalidMRZException(
             "Expected line 0 to be 36-chars long, is {}".format(
@@ -191,6 +215,9 @@ def cni_mrz_to_dict(mrz_data):
 
     if len(mrz_data[1]) > 36 and mrz_data[1][34] in ('M', 'F', 'H'):
         mrz_data[1] = mrz_data[1][:36]
+
+    if len(mrz_data[1]) > 36 and mrz_data[1][-2] in ('M', 'F', 'H'):
+        mrz_data[1] = mrz_data[1][-36:]
 
     if len(mrz_data[1]) != 36:
         raise InvalidMRZException(

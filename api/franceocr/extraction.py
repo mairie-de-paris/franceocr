@@ -77,7 +77,7 @@ def extract_document(image):
     edged[edged <= np.percentile(edged, 70)] = 0
 
     edged_8u = np.asarray(edged, np.uint8)
-    INFO_display_image(edged_8u, "Edged")
+    DEBUG_display_image(edged_8u, "Edged")
 
     # Find contours
     significant = find_significant_contours(edged_8u, approx=True)
@@ -89,11 +89,11 @@ def extract_document(image):
         bbox = np.int0(bbox)
 
     image = four_point_transform(image, bbox.reshape(4, 2))
-    INFO_display_image(image, "Extracted0")
+    DEBUG_display_image(image, "Extracted0")
 
     extracted_ar = image.shape[1] / image.shape[0]
     print(extracted_ar)
-    if 0.65 <= extracted_ar <= 0.75 or 1.35 <= extracted_ar <= 1.45:
+    if 0.65 <= extracted_ar <= 0.75 or 1.35 <= extracted_ar <= 1.6:
         orig = four_point_transform(orig, bbox.reshape(4, 2) * orig_ratio)
 
     # === End of the pass 0 of the extraction === #
@@ -104,7 +104,7 @@ def extract_document(image):
     image = imutils.resize(orig, width=IMAGE_WIDTH)
 
     image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    lower_blue = np.array([210 / 2, 100, 40])
+    lower_blue = np.array([210 / 2, 60, 40])
     upper_blue = np.array([260 / 2, 255, 255])
     image_blue = cv2.inRange(image_hsv, lower_blue, upper_blue)
 

@@ -57,9 +57,9 @@ def cni_locate_zones(image, improved):
             "height": 60,
             "offset_x": -8,
             "offset_y": 5,
-            "after_x": 720,
+            "after_x": 700,
             "before_x": 920,
-            "after_y": 310,
+            "after_y": 280,
             "before_y": 450,
         },
         "birth_place": {
@@ -67,9 +67,9 @@ def cni_locate_zones(image, improved):
             "height": 60,
             "offset_x": 0,
             "offset_y": 48,
-            "after_x": 350,
+            "after_x": 330,
             "before_x": 500,
-            "after_y": 310,
+            "after_y": 280,
             "before_y": 580,
         },
     }

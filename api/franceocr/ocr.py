@@ -38,6 +38,8 @@ def ocr_cni(image):
         "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni"
     )
 
+    ocr_result = re.sub(r" +", " ", ocr_result)
+
     return ocr_result \
         .lstrip(":") \
         .replace(",", "") \
