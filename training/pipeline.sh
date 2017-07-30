@@ -6,13 +6,13 @@ mkdir -p franceocr_from_eng/
 cp franceocrdata/* langdata/eng/
 # cp eng.franceocr.exp0.{box,tif} langdata/eng/
 
-# Generate training data (lstmf files)
+# Generate training data (lstmf files)  # "DejaVu Sans" 
 ../../tesseract/training/tesstrain.sh \
     --lang eng \
     --langdata_dir langdata \
     --linedata_only \
     --noextract_font_properties \
-    --fontlist "DejaVu Sans" "OCRB" \
+    --fontlist "OCRB" \
     --output_dir franceocr_from_eng \
     --training_text langdata/eng/franceocr.training_text \
     --exposures "0"
