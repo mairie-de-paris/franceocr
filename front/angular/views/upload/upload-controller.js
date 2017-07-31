@@ -27,14 +27,14 @@ angular.module('myApp.upload', ['angularFileUpload', 'myApp.scanService'])
                     .progress(function(evt) {
                         console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
                         $scope.uploadPercent =  parseInt(100.0 * evt.loaded / evt.total);
+
                     }).success(function(data, status, headers, config) {
                         // file is uploaded successfully
                         console.log("Upload success, redirecting, response data:");
                         console.log(data);
                         scanService.setScanData(data);
                         $scope.loading = false;
-                        //$window.location.href = "#/results";
-                        $window.location.assign("#/results");
+                        $location.url("/results");
 
                     }).error(function(er) {
                         // file is not uploaded or scanned successfully
@@ -47,8 +47,7 @@ angular.module('myApp.upload', ['angularFileUpload', 'myApp.scanService'])
                         $scope.errorMessage = er.message;
                         scanService.refuseScanData();
                         $scope.loading = false;
-                        //$window.location.href = "#/upload";
-                        $window.location.assign("#/upload");
+                        $location.url("/upload");
                     });
                 //.then(success, error, progress);
                 // access or attach event listeners to the underlying XMLHttpRequest.

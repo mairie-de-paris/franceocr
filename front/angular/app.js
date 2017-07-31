@@ -15,12 +15,12 @@ angular.module('myApp', [
     'myApp.upload',
     'myApp.results',
     // Loading bar for AJAX requests
-    'cfp.loadingBarInterceptor',
+    'cfp.loadingBarInterceptor'
 ])
 /*
  * Set url routings
  */
-    .config(function($routeProvider, cfpLoadingBarProvider) {
+    .config(function($routeProvider, $locationProvider,  cfpLoadingBarProvider) {
         $routeProvider
             .when('/home',
                 { templateUrl: 'angular/views/home/home.html',
@@ -32,6 +32,8 @@ angular.module('myApp', [
                 {templateUrl: 'angular/views/results/results.html',
                     controller: 'ResultsController'})
             .otherwise({redirectTo: '/home'});
+
+        $locationProvider.html5Mode(true);
 
         // Enable loading bar spinner
         cfpLoadingBarProvider.includeSpinner = true;

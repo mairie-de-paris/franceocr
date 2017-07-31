@@ -2,6 +2,7 @@
 <html lang="en" ng-app="myApp" class="no-js">
   <head>
     <meta charset="utf-8">
+    <!--<base href="/projet-mairie/front/">-->
       <meta name="description" content="">
       <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -23,9 +24,9 @@
 
     <ul ng-controller="NavbarController" class="nav nav-tabs">
 
-      <li  ng-class="{ active: isActive('/home')}"><a href="#/home">Accueil</a></li>
-      <li  ng-class="{ active: isActive('/upload')}"><a href="#/upload">Importation</a></li>
-      <li  ng-class="{ active: isActive('/results')}"><a href="#/results">Résultats</a></li>
+      <li  ng-class="{ active: isActive('/home')}"><a href="/home">Accueil</a></li>
+      <li  ng-class="{ active: isActive('/upload')}"><a href="/upload">Importation</a></li>
+      <li  ng-class="{ active: isActive('/results')}"><a href="/results">Résultats</a></li>
     </ul>
 
     <!-- Container for dynamic page content, which is animated. -->
