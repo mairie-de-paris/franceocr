@@ -2,7 +2,8 @@ version: "2"
 
 services:
     api:
-        image: LouisTrezzini/projet-mairie
+        image: ltrezzini/franceocr-api
+        build: api
         volumes:
             - api-data:/uploads:rw
             - api-logs:/logs:rw
