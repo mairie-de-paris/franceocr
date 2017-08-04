@@ -6,8 +6,6 @@ DEBUG = True
 HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', '5000'))
 
-MONGO_HOST = os.getenv('MONGO_HOST', '127.0.0.1')
-
 # Grabs the folder where the script runs.
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 

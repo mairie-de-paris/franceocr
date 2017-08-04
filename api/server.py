@@ -2,7 +2,6 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 
 import config
-from database import mongo
 from exceptions import InvalidUsageException
 from routes import cni_blueprint, common_blueprint, front_blueprint
 
@@ -12,8 +11,6 @@ server = Flask(__name__)
 # Load configuration
 server.config.from_object(config)
 server.debug = config.DEBUG
-
-mongo.init_app(server)
 
 CORS(
     server,

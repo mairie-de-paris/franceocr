@@ -1,30 +1,16 @@
 version: "2"
 
 services:
-    db:
-        image: mongo
-        volumes:
-            - db-data:/data/db:rw
-        restart: always
-
     api:
         build: api
-        environment:
-            - MONGO_HOST=db
         volumes:
             - api-data:/uploads:rw
             - api-logs:/logs:rw
-        depends_on:
-            - db
-        links:
-            - db:db
         ports:
             - "127.0.0.1:5000:8000"
         restart: always
 
 volumes:
-    db-data:
-        driver: local
     api-data:
         driver: local
     api-logs:
