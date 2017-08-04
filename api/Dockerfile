@@ -1,29 +1,42 @@
-# start with a base image
-FROM base/archlinux
+FROM python:alpine3.6
+MAINTAINER Louis Trezzini <louis.trezzini@ponts.org>
 
-RUN pacman -Sy
-RUN pacman -S --needed --noconfirm opencv python-numpy eigen
-RUN pacman -S --needed --noconfirm python-pip
-RUN pacman -S --needed --noconfirm git gcc make autoconf-archive automake cmake pkg-config pango cairo icu
-RUN pacman -S --needed --noconfirm leptonica hdf5
-
-# Install tesseract
-RUN git clone https://github.com/tesseract-ocr/tesseract.git /deps/tesseract
-WORKDIR /deps/tesseract
-RUN ./autogen.sh && ./configure && make && make install
-
-RUN groupadd python && useradd --create-home --home-dir /home/python -g python python
+RUN addgroup -S python && adduser -S -g python python
 
 RUN mkdir /app && chown python:python /app && chmod 700 /app
 RUN mkdir /uploads && chown python:python /uploads && chmod 700 /uploads
 
-ENV PATH="/usr/local/bin:${PATH}" LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib" TESSDATA_PREFIX=/usr/local/share/tessdata
-
 WORKDIR /app
 
-# Install python dependencies
-COPY requirements.txt /app
-RUN pip install -U -r requirements.txt
+COPY requirements.txt requirements.txt
+RUN echo \
+    && echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" > /etc/apk/repositories \
+    && echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
+    && echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories \
+    && apk add --no-cache opencv leptonica libstdc++ lapack-dev \
+    && apk add --no-cache --virtual .build-deps build-base git autoconf automake hdf5 libjpeg-dev gfortran libpng-dev freetype-dev \
+    && pip install numpy \
+    && pip install -r requirements.txt \
+    && git clone https://github.com/tesseract-ocr/tesseract.git /deps/tesseract \
+    && cd /deps/tesseract \
+    && ./autogen.sh && ./configure && make -j $(nproc) && make install \
+    && cd /app \
+    && rm -r /deps \
+    && find /usr/local \
+        \( -type d -a -name test -o -name tests \) \
+        -o \( -type f -a -name '*.pyc' -o -name '*.pyo' \) \
+        -exec rm -rf '{}' + \
+    && runDeps="$( \
+        scanelf --needed --nobanner --recursive /usr/local \
+                | awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
+                | sort -u \
+                | xargs -r apk info --installed \
+                | sort -u \
+    )" \
+    && apk add --virtual .rundeps $runDeps \
+    && apk del .build-deps
+
+ENV PATH="/usr/local/bin:${PATH}" LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib" TESSDATA_PREFIX=/usr/local/share/tessdata
 
 # Install trained lang data
 RUN mkdir -p $TESSDATA_PREFIX
