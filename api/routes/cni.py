@@ -4,6 +4,7 @@ import os
 
 from flask import Blueprint, current_app, jsonify, request
 from uuid import uuid4
+from wand.image import Image as WandImage
 
 from franceocr import cni_process
 from franceocr.cni.exceptions import InvalidChecksumException, InvalidMRZException
@@ -11,7 +12,7 @@ from franceocr.exceptions import ImageProcessingException, InvalidOCRException
 
 from excel_export import fill_new_line
 from exceptions import InvalidUsageException
-from utils import allowed_file, to_json
+from utils import allowed_file, is_pdf, to_json
 
 cni_blueprint = Blueprint('cni', __name__)
 
@@ -42,7 +43,15 @@ def cni_scan():
 
     filename = str(uuid4()) + os.path.splitext(image_file.filename)[1]
     filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-    image_file.save(filepath)
+
+    if is_pdf(image_file):
+        # Converting first page into JPG
+        with WandImage(file=image_file) as img:
+            with img.convert("jpg") as converted_img:
+                filepath += ".jpg"
+                converted_img.save(filename=filepath)
+    else:
+        image_file.save(filepath)
 
     # image = np.array(Image.open(image_file.stream))
     # image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)

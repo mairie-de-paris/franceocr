@@ -20,5 +20,9 @@ def allowed_file(file):
     return file.mimetype in ALLOWED_MIME
 
 
+def is_pdf(file):
+    return file.mimetype == "application/pdf"
+
+
 def to_json(data):
     return json.dumps(data, default=json_util.default)
