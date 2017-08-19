@@ -5,6 +5,7 @@ RUN addgroup -S python && adduser -S -g python python
 
 RUN mkdir /app && chown python:python /app && chmod 700 /app
 RUN mkdir /uploads && chown python:python /uploads && chmod 700 /uploads
+RUN mkdir /logs && chown python:python /logs && chmod 700 /logs
 
 WORKDIR /app
 
@@ -48,5 +49,5 @@ COPY . /app
 
 USER python
 
-EXPOSE 8000
-ENTRYPOINT ["gunicorn", "--config", "/app/gunicorn.conf", "--log-config", "/app/logging.conf", "-b", ":8000", "server:server"]
+EXPOSE 5000
+ENTRYPOINT ["gunicorn", "--config", "/app/gunicorn.conf", "--log-config", "/app/logging.conf", "-b", ":5000", "server:server"]
