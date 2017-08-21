@@ -1,7 +1,6 @@
 import json
 import requests
 
-from bson import json_util
 from io import BytesIO
 from PIL import Image
 
@@ -25,4 +24,4 @@ def is_pdf(file):
 
 
 def to_json(data):
-    return json.dumps(data, default=json_util.default)
+    return json.dumps(data)

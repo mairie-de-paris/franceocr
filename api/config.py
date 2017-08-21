@@ -16,28 +16,3 @@ ALLOWED_MIME = set([
     'application/pdf',
 ])
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024
-
-# ===================
-#       LOGGING
-# ===================
-formatter = logging.Formatter(
-    "%(asctime)s - module:%(module)s - [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
-
-logger = logging.getLogger()
-
-logger.setLevel(logging.DEBUG)
-
-# Console logging
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
-
-# File logging
-file_handler = logging.handlers.TimedRotatingFileHandler(
-    os.path.join(BASEDIR, '../logs/server.log'),
-    when='midnight',
-)
-file_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
