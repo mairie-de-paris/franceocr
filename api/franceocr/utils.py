@@ -17,17 +17,13 @@ def display_image(image, window_name="Image", alone=True, resize=400):
 
 
 def DEBUG_display_image(image, window_name="Image", alone=True, resize=400):
-    if not DEBUG:
-        return
-
-    display_image(image, window_name, alone, resize)
+    if DEBUG or INFO:
+        display_image(image, window_name, alone, resize)
 
 
 def INFO_display_image(image, window_name="Image", alone=True, resize=400):
-    if not INFO:
-        return
-
-    display_image(image, window_name, alone, resize)
+    if INFO:
+        display_image(image, window_name, alone, resize)
 
 
 def in_bounds(bbox, image):

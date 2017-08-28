@@ -113,6 +113,13 @@ def extract_document(image):
     DEBUG_display_image(image, "Image", alone=False)
     DEBUG_display_image(image_blue, "Blue component")
 
+    image_blue = cv2.erode(image_blue, None, iterations=3)
+    blackhatKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (75, 25))
+    image_blue = cv2.morphologyEx(image_blue, cv2.MORPH_CLOSE, blackhatKernel)
+    image_blue = cv2.threshold(image_blue, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+
+    DEBUG_display_image(image_blue, "Blue component 2")
+
     # Find contours
     significant = find_significant_contours(image_blue, ratio=0)
 
