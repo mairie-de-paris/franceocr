@@ -11,7 +11,7 @@ WORKDIR /app
 
 RUN echo \
     && pacman -Sy \
-    && pacman -S --needed --noconfirm opencv python-numpy hdf5 \
+    && pacman -S --needed --noconfirm opencv python-numpy hdf5 ghostscript \
     && pacman -S --needed --noconfirm python-pip git gcc make autoconf-archive automake pkg-config leptonica imagemagick \
     && git clone https://github.com/tesseract-ocr/tesseract.git /deps/tesseract \
     && cd /deps/tesseract \
