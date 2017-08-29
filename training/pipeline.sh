@@ -6,7 +6,7 @@ mkdir -p franceocr_from_eng/
 cp franceocrdata/* langdata/eng/
 # cp eng.franceocr.exp0.{box,tif} langdata/eng/
 
-# Generate training data (lstmf files)  # "DejaVu Sans" 
+# Generate training data (lstmf files)  # "DejaVu Sans"
 ../../tesseract/training/tesstrain.sh \
     --lang eng \
     --langdata_dir langdata \
@@ -20,21 +20,11 @@ cp franceocrdata/* langdata/eng/
 # Generate list of wanted lstmf files
 ./list_train.sh
 
-# Extract english neural network weights
-combine_tessdata -e /usr/local/share/tessdata/eng.traineddata franceocr_from_eng/eng.lstm
-
 # Train
 ./train.sh
 
 # Once the network has converged, pack the weights
 ./stop_train.sh
-
-# Copy english trained data
-cp /usr/local/share/tessdata/eng.traineddata franceocr_from_eng/franceocr.traineddata
-
-# Replace old english weights with fine-tuned ones (trained on our tif/box pairs)
-combine_tessdata -o franceocr_from_eng/franceocr.traineddata franceocr_from_eng/francocr.lstm
-combine_tessdata -o franceocr_from_eng/franceocr.traineddata franceocr_from_eng/eng.lstm-*
 
 cp franceocr_from_eng/franceocr.traineddata ../api
 

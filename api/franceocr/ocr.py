@@ -35,12 +35,13 @@ def ocr_cni(image):
     ocr_result = ocr(
         image,
         "franceocr",
-        "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni"
+        "--oem 1 --psm 7 " + BASEDIR + "/tessconfig/cni"
     )
 
     ocr_result = ocr_result \
         .lstrip(":") \
         .replace(",", "") \
+        .replace(".", "") \
         .strip()
 
     return re.sub(r" +", " ", ocr_result)
@@ -50,7 +51,7 @@ def ocr_cni_birth_date(image):
     ocr_result = ocr(
         image,
         "franceocr",
-        "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni-birth_date"
+        "--oem 1 --psm 7 " + BASEDIR + "/tessconfig/cni-birth_date"
     )
 
     ocr_result = ocr_read_number(ocr_result)
@@ -65,7 +66,7 @@ def ocr_cni_birth_place(image):
     ocr_result = ocr(
         image,
         "franceocr",
-        "--oem 2 --psm 7 " + BASEDIR + "/tessconfig/cni-birth_place"
+        "--oem 1 --psm 7 " + BASEDIR + "/tessconfig/cni-birth_place"
     )
 
     no_brackets = re.sub(

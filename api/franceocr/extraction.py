@@ -113,12 +113,13 @@ def extract_document(image):
     DEBUG_display_image(image, "Image", alone=False)
     DEBUG_display_image(image_blue, "Blue component")
 
-    image_blue = cv2.erode(image_blue, None, iterations=3)
-    blackhatKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (75, 25))
-    image_blue = cv2.morphologyEx(image_blue, cv2.MORPH_CLOSE, blackhatKernel)
-    image_blue = cv2.threshold(image_blue, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    # Clean up blue component to find orientation
+    image_blue_2 = cv2.erode(image_blue, None, iterations=5)
+    # blackhatKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (50, 50))
+    # image_blue_2 = cv2.morphologyEx(image_blue_2, cv2.MORPH_CLOSE, blackhatKernel)
+    # image_blue_2 = cv2.threshold(image_blue_2, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
-    DEBUG_display_image(image_blue, "Blue component 2")
+    DEBUG_display_image(image_blue_2, "Blue component 2")
 
     # Find contours
     significant = find_significant_contours(image_blue, ratio=0)
@@ -128,7 +129,10 @@ def extract_document(image):
     bbox = order_points(bbox)
 
     # Make sure the document has the right orientation
-    center_x, center_y = np.mean(bbox, axis=0)
+    accumulator = np.where(image_blue_2)
+    center_x = np.median(accumulator[1])
+    center_y = np.median(accumulator[0])
+    print(center_x, center_y, np.mean(bbox, axis=0))
 
     if center_x < image.shape[1] / 3:
         logging.debug("Rotate right")
