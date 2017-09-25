@@ -48,6 +48,7 @@ from franceocr.extraction import extract_document, improve_bbox_image, improve_i
 from franceocr.geo import city_exists
 from franceocr.ocr import ocr_cni, ocr_cni_birth_date, ocr_cni_birth_place
 from franceocr.utils import DEBUG_display_image, INFO_display_image
+from franceocr.check_mrz_ocr import same_ocr_mrz
 
 
 def cni_locate_zones(image, improved):
@@ -224,6 +225,13 @@ def cni_process(image):
     birth_place_exists, birth_place_validated, similar_birth_places = city_exists(zones["birth_place"]["value"])
 
     birth_year_validated = cni_validate_birth_year(mrz_data["birth_year"], zones["birth_date"]["value"][-4:])
+
+    if not(same_ocr_mrz(mrz_data, zones)):
+        logging.debug("MRZ and OCR data don't match", exc_info=True)
+        raise ImageProcessingException(
+            "MRZ and OCR data don't match",
+            "Les données MRZ et OCR ne correspondent pas"
+        )
 
     return {
         "mrz": mrz_data,
