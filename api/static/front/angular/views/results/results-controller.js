@@ -4,6 +4,7 @@ angular.module('myApp.results', ['myApp.scanService'])
 
         //putting data from scanService in $scope variables
         $scope.scanData = scanService.getScanData();
+        $scope.prettyScanData = JSON.stringify(JSON.parse($scope.scanData), null, 4);
         $scope.lastName = $scope.scanData.data.last_name_ocr;
         $scope.firstName = $scope.scanData.data.first_name_ocr;
         $scope.birthDate = $scope.scanData.data.birth_date_ocr;
