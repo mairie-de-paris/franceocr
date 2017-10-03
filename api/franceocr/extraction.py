@@ -132,7 +132,6 @@ def extract_document(image):
     accumulator = np.where(image_blue_2)
     center_x = np.median(accumulator[1])
     center_y = np.median(accumulator[0])
-    print(center_x, center_y, np.mean(bbox, axis=0))
 
     if center_x < image.shape[1] / 3:
         logging.debug("Rotate right")

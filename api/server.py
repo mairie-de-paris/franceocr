@@ -15,7 +15,7 @@ server.debug = config.DEBUG
 CORS(
     server,
     resources={r"/*": {"origins": "*"}},
-    allow_headers=['Content-Type', 'X-Requested-With', 'Authorization']
+    allow_headers=["Content-Type", "X-Requested-With", "Authorization"]
 )
 
 
@@ -30,5 +30,5 @@ server.register_blueprint(cni_blueprint)
 server.register_blueprint(common_blueprint)
 server.register_blueprint(front_blueprint)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     server.run(host=config.HOST, port=config.PORT)
