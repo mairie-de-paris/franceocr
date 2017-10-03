@@ -3,7 +3,7 @@ from flask_cors import CORS
 
 import config
 from exceptions import InvalidUsageException
-from routes import cni_blueprint, common_blueprint, front_blueprint
+from routes import cni_blueprint, common_blueprint, front_blueprint, swagger_blueprint
 
 
 server = Flask(__name__)
@@ -26,8 +26,9 @@ def handle_invalid_usage(error):
     return response
 
 
-server.register_blueprint(cni_blueprint)
 server.register_blueprint(common_blueprint)
+server.register_blueprint(swagger_blueprint)
+server.register_blueprint(cni_blueprint)
 server.register_blueprint(front_blueprint)
 
 if __name__ == "__main__":

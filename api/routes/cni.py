@@ -31,8 +31,130 @@ def handle_errors(error):
     return response
 
 
-@cni_blueprint.route("/cni/scan", methods=["POST"])
+@cni_blueprint.route("/api/cni/scan", methods=["POST"])
 def cni_scan():
+    """
+    Scan a French National Identity Card
+    ---
+    tags:
+      - cni
+    parameters:
+      - in: image
+        name: image
+        type: file
+    responses:
+      201:
+        description: Scan successful
+        schema:
+          id: ScanOutput
+          properties:
+            image_path:
+              type: string
+              description: path to the uploaded original image
+            excel_path:
+              type: string
+              description: path to the results Excel sheet
+            data:
+              description: extracted data from CNI
+              schema:
+                id: CNIScanOutput
+                properties:
+                  validated:
+                    description: validated data from the scan
+                    schema:
+                      id: CNIValidatedData
+                      properties:
+                        birth_date:
+                          type: string
+                          description: birth date of the card's holder
+                        birth_place:
+                          type: string
+                          description: birth place of the card's holder
+                        first_name:
+                          type: string
+                          description: first names of the card's holder
+                        last_name:
+                          type: string
+                          description: last name of the card's holder
+                  ocr:
+                    description: raw data from OCR
+                    schema:
+                      id: CNIOCRData
+                      properties:
+                        birth_date:
+                          type: string
+                          description: birth date of the card's holder
+                        birth_place:
+                          type: string
+                          description: birth place of the card's holder
+                        first_name:
+                          type: string
+                          description: first names of the card's holder
+                        last_name:
+                          type: string
+                          description: last name of the card's holder
+                  mrz:
+                    description: raw data from MRZ
+                    schema:
+                      id: CNIMRZData
+                      properties:
+                        adm_code:
+                          type: string
+                          description: qzd
+                        adm_code2:
+                          type: string
+                          description: qzd
+                        birth_day:
+                          type: integer
+                          description: day of birth of the card's holder
+                        birth_month:
+                          type: integer
+                          description: month of birth of the card's holder
+                        birth_year:
+                          type: integer
+                          description: year of birth of the card's holder
+                        checksum:
+                          type: integer
+                          description: global checksum of the card
+                        checksum_birth:
+                          type: integer
+                          description: checksum of the birth date
+                        checksum_emission:
+                          type: integer
+                          description: checksum of the emission date
+                        country:
+                          type: string
+                          description: card's emission country
+                          enum:
+                            - FRA
+                        emission_code:
+                          type: integer
+                          description: qzd
+                        emission_month:
+                          type: integer
+                          description: month of emission of the card
+                        emission_year:
+                          type: integer
+                          description: year of emission of the card
+                        first_name:
+                          type: string
+                          description: truncated first names of the card's holder
+                        id:
+                          type: string
+                          description: MRZ type
+                          enum:
+                            - ID
+                        last_name:
+                          type: string
+                          description: truncated last name of the card's holder
+                        sex:
+                          type: string
+                          description: sex of the card's holder
+                          enum:
+                            - F
+                            - M
+
+    """
     image_file = request.files.get("image")
 
     if not image_file:
@@ -75,10 +197,10 @@ def cni_scan():
 
     fill_new_line(
         excel_path,
-        cni_data["first_name_ocr"],
-        cni_data["last_name_ocr"],
-        cni_data["birth_date_mrz"],
-        cni_data["birth_place_ocr"],
+        cni_data["validated"]["first_name"],
+        cni_data["validated"]["last_name"],
+        cni_data["validated"]["birth_date"],
+        cni_data["validated"]["birth_place"],
         "Non",
         None
     )

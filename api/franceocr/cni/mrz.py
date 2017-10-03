@@ -257,11 +257,11 @@ def cni_mrz_to_dict(mrz_data):
         "country": line1[2:5],
         "last_name": mrz_read_last_name(line1[5:30]),
         "adm_code": line1[30:36],
-        "emit_year": int(line2[0:2]),
-        "emit_month": int(line2[2:4]),
+        "emission_year": int(line2[0:2]),
+        "emission_month": int(line2[2:4]),
         "adm_code2": line2[4:7],
-        "emit_code": int(line2[7:12]),
-        "checksum_emit": int(line2[12]),
+        "emission_code": int(line2[7:12]),
+        "checksum_emission": int(line2[12]),
         "first_name": mrz_read_first_name(line2[13:27]),
         "birth_year": int(line2[27:29]),
         "birth_month": int(line2[29:31]),
@@ -278,7 +278,7 @@ def cni_mrz_to_dict(mrz_data):
 
     # assert(values["adm_code2"] == values["adm_code"][0:3])
 
-    if checksum_mrz(line2[0:12]) != values["checksum_emit"]:
+    if checksum_mrz(line2[0:12]) != values["checksum_emission"]:
         raise InvalidChecksumException(
             "Invalid emit checksum"
         )

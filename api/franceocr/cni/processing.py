@@ -4,6 +4,7 @@ import logging
 import numpy as np
 import os.path
 
+from datetime import datetime
 from skimage.feature import match_template
 
 from franceocr.cni.mrz import process_cni_mrz
@@ -135,6 +136,18 @@ def cni_read_zones(zones):
     return zones
 
 
+def cni_validate_birth_year(mrz_year, ocr_year_string):
+    if "19" + str(mrz_year) == ocr_year_string:
+        return 1900 + mrz_year
+    elif "20" + str(mrz_year) == ocr_year_string:
+        return 2000 + mrz_year
+    else:
+        if mrz_year <= datetime.now().year % 100:
+            return 2000 + mrz_year
+        else:
+            return 1900 + mrz_year
+
+
 def cni_process(image):
 
     if not is_extracted(image):
@@ -175,28 +188,29 @@ def cni_process(image):
         last_name_corrected += zones["last_name"]["value"][25:]
     first_name_corrected = mrz_data["first_name"] + zones["first_name"]["value"][len(mrz_data["first_name"]):]
 
-    birth_place_exists, birth_place_corrected, similar_birth_places = city_exists(zones["birth_place"]["value"])
+    birth_place_exists, birth_place_validated, similar_birth_places = city_exists(zones["birth_place"]["value"])
+
+    birth_year_validated = cni_validate_birth_year(mrz_data["birth_year"], zones["birth_date"]["value"][-4:])
 
     return {
         "mrz": mrz_data,
+        "validated": {
+            "birth_date": datetime(
+                day=mrz_data["birth_day"],
+                month=mrz_data["birth_month"],
+                year=birth_year_validated,
+            ).date().isoformat(),
+            "birth_place": birth_place_validated,
+            "birth_place_exists": birth_place_exists,
+            "birth_place_similar": similar_birth_places,
+            "first_name": first_name_corrected,
+            "last_name": last_name_corrected,
+        },
+        "ocr": {
+            "birth_date": zones["birth_date"]["value"],
+            "birth_place": zones["birth_place"]["value"],
+            "first_name": zones["first_name"]["value"],
+            "last_name": zones["last_name"]["value"],
 
-        "last_name_mrz": mrz_data["last_name"],
-        "last_name_ocr": zones["last_name"]["value"],
-        "last_name_corrected": last_name_corrected,
-
-        "first_name_mrz": mrz_data["first_name"],
-        "first_name_ocr": zones["first_name"]["value"],
-        "first_name_corrected": first_name_corrected,
-
-        "birth_date_mrz": "{}{}{}".format(
-            mrz_data["birth_day"],
-            mrz_data["birth_month"],
-            mrz_data["birth_year"],
-        ),
-        "birth_date_ocr": zones["birth_date"]["value"],
-
-        "birth_place_ocr": zones["birth_place"]["value"],
-        "birth_place_corrected": birth_place_corrected,
-        "birth_place_exists": birth_place_exists,
-        "birth_place_similar": similar_birth_places,
+        }
     }

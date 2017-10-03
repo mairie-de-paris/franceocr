@@ -19,7 +19,7 @@ angular.module('myApp.upload', ['angularFileUpload', 'myApp.scanService'])
             for (var i = 0; i < $files.length; i++) {
                 var file = $files[i];
                 $scope.upload = $upload.upload({
-                    url: '/cni/scan',
+                    url: '/api/cni/scan',
                     fileFormDataName: 'image',
                     method: 'POST',
                     file: file
