@@ -39,11 +39,24 @@ def cni_scan():
     tags:
       - cni
     parameters:
-      - in: image
+      - in: body
         name: image
         type: file
+        required: true
+        description: a picture of a CNI card (pdf, png, or jpeg)
     responses:
-      201:
+      422:
+        description: FranceOCR processing exception
+        schema:
+          id: APIError
+          properties:
+            exception:
+              type: string
+              description: exception name
+            message:
+              type: string
+              description: exception message
+      200:
         description: Scan successful
         schema:
           id: ScanOutput
@@ -70,6 +83,12 @@ def cni_scan():
                         birth_place:
                           type: string
                           description: birth place of the card's holder
+                        birth_place_exists:
+                          type: boolean
+                          description: does the birth place of the card's holder exist?
+                        birth_place_similar:
+                          type: array
+                          description: 5 most similar city names from OCR'd birth place as a couple (name, match percentage)
                         first_name:
                           type: string
                           description: first names of the card's holder
@@ -100,10 +119,10 @@ def cni_scan():
                       properties:
                         adm_code:
                           type: string
-                          description: qzd
+                          description: internal code from the administration of the issuing office
                         adm_code2:
                           type: string
-                          description: qzd
+                          description: same first three characters as adm_code
                         birth_day:
                           type: integer
                           description: day of birth of the card's holder
@@ -129,7 +148,7 @@ def cni_scan():
                             - FRA
                         emission_code:
                           type: integer
-                          description: qzd
+                          description: assigned by the management center in chronological order in relation to the place of issue and the date of application
                         emission_month:
                           type: integer
                           description: month of emission of the card
