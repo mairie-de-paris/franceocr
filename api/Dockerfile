@@ -18,7 +18,7 @@ RUN echo \
     && ./autogen.sh && ./configure && make -j $(nproc) && make install \
     && rm -r /deps
 
-# TODO: cleanup
+# TODO: freeze requirements and cleanup install
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
