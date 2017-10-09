@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import cv2
 import logging
 import os
+import datetime
 
 from flask import Blueprint, current_app, jsonify, request
 from uuid import uuid4
@@ -227,6 +228,8 @@ def cni_scan():
     else:
         image_file.save(filepath)
 
+    timestamp_of_saved_image = " ({:%Y-%b-%d %H:%M})".format(datetime.datetime.now())
+
     # image = np.array(Image.open(image_file.stream))
     # image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
     # print(image.shape)
@@ -244,7 +247,7 @@ def cni_scan():
         cni_data = cni_process(image)
     except ImageProcessingException as ex:
         error_message_fr = ex.args[1] if len(ex.args) > 1 else ex.args[0]
-        fill_new_line(excel_path, None, None, None, None, "Oui", error_message_fr)
+        fill_new_line(excel_path, None, None, None, None, "Oui", error_message_fr + timestamp_of_saved_image)
         raise ex
 
     fill_new_line(
