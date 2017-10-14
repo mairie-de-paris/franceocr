@@ -105,7 +105,6 @@ def extract_document(image):
         edge_detect(blurred[:, :, 1]),
         edge_detect(blurred[:, :, 2])
     ]), axis=0)
-    # edged = cv2.Laplacian()
     # Zero any value that is less than mean. This reduces a lot of noise.
     edged[edged <= np.percentile(edged, 70)] = 0
 
@@ -125,7 +124,8 @@ def extract_document(image):
     DEBUG_display_image(image, "Extracted0")
 
     extracted_ar = image.shape[1] / image.shape[0]
-    print(extracted_ar)
+    logging.debug("Aspect ratio of extracted image: %s", extracted_ar)
+    # If the aspect ratio of the extracted image makes sense, we effectively apply the extraction to the original image
     if 0.65 <= extracted_ar <= 0.75 or 1.35 <= extracted_ar <= 1.6:
         orig = four_point_transform(orig, bbox.reshape(4, 2) * orig_ratio)
 
@@ -235,8 +235,11 @@ def extract_document(image):
     # ==== Remove additionnal space below the document ==== #
 
     aspect_ratio = image.shape[0] / image.shape[1]
-    print(aspect_ratio)
+    logging.debug("Aspect ratio of the fully extracted image: %s (max 0.73)", aspect_ratio)
 
+    # The width and the locaton of the top are known precisely
+    # If the aspect ratio is too big, it means we have much space below the scan
+    # Let's find the first STRONG line from the bottom of the image and cut right there
     if aspect_ratio > 0.73:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         edged = edge_detect(image)
