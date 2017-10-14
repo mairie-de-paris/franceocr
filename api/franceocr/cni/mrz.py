@@ -241,8 +241,9 @@ def cni_mrz_to_dict(mrz_data):
 
     if len(mrz_data[0]) != 36:
         raise InvalidMRZException(
-            "Expected line 0 to be 36-chars long, is {}".format(
-                len(mrz_data[0])
+            "Expected line 0 to be 36-chars long, is {} ({})".format(
+                len(mrz_data[0]),
+                mrz_data[0],
             )
         )
 
@@ -254,8 +255,9 @@ def cni_mrz_to_dict(mrz_data):
 
     if len(mrz_data[1]) != 36:
         raise InvalidMRZException(
-            "Expected line 1 to be 36-chars long, is {}".format(
-                len(mrz_data[1])
+            "Expected line 1 to be 36-chars long, is {} ({})".format(
+                len(mrz_data[1]),
+                mrz_data[1],
             )
         )
 
