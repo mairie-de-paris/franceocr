@@ -238,6 +238,9 @@ def cni_scan():
     # FIXME
     image = cv2.imread(filepath)
 
+    if not current_app.config["KEEP_SCANS"]:
+        os.remove(filepath)
+
     if min(image.shape[0], image.shape[1]) < 900:
         raise InvalidUsageException("Image must be at least 900x900 pixels")
 

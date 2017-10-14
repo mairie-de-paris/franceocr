@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 
-import logging
 import os
 
 DEBUG = True
@@ -48,3 +47,5 @@ ALLOWED_MIME = set([
     'application/pdf',
 ])
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024
+
+KEEP_SCANS = False
