@@ -31,6 +31,27 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 
-class ImageProcessingException(Exception):
-    def __init___(self, message):
-        Exception.__init__(self, message)
+class FranceOCRException(Exception):
+        def __init__(self, code, message_en, message_fr=None, status_code=None, payload=None):
+            super().__init__()
+
+            self.code = code
+            self.message = message_en
+            self.message_fr = message_fr if message_fr is not None else message_en
+
+            self.payload = payload
+
+        def to_dict(self):
+            dict_output = dict(self.payload or ())
+            dict_output["code"] = self.code
+            dict_output["message"] = self.message
+
+            return dict_output
+
+
+class ImageProcessingException(FranceOCRException):
+    pass
+
+
+class InvalidOCRException(FranceOCRException):
+    pass

@@ -31,11 +31,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 
-class InvalidMRZException(Exception):
-    def __init___(self, message):
-        Exception.__init__(self, message)
+from franceocr.exceptions import FranceOCRException
+
+
+class InvalidMRZException(FranceOCRException):
+    pass
 
 
 class InvalidChecksumException(InvalidMRZException):
-    def __init___(self, message):
-        InvalidMRZException.__init__(self, message)
+    pass

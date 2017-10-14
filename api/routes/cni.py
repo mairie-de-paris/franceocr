@@ -59,7 +59,8 @@ def handle_errors(error):
     logging.warn("FranceOCR exception", exc_info=True)
     response = jsonify({
         "exception": type(error).__name__,
-        "message": error.args[0],
+        "code": error.code,
+        "message": error.message,
     })
     response.status_code = 422
     return response
@@ -211,10 +212,10 @@ def cni_scan():
     image_file = request.files.get("image")
 
     if not image_file:
-        raise InvalidUsageException("No file provided")
+        raise InvalidUsageException("MISSING_IMAGE_FILE", "Missing file in `image` field")
 
     if not allowed_file(image_file):
-        raise InvalidUsageException("Invalid file type")
+        raise InvalidUsageException("INVALID_FILE_TYPE", "Invalid file type")
 
     filename = str(uuid4()) + os.path.splitext(image_file.filename)[1]
     filepath = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
@@ -242,26 +243,25 @@ def cni_scan():
         os.remove(filepath)
 
     if min(image.shape[0], image.shape[1]) < 900:
-        raise InvalidUsageException("Image must be at least 900x900 pixels")
+        raise InvalidUsageException("IMG_SIZE_TOO_SMALL", "Image must be at least 900x900 pixels")
 
     excel_path = os.path.join(current_app.config["UPLOAD_FOLDER"], "exported_data.xls")
 
     try:
         cni_data = cni_process(image)
     except ImageProcessingException as ex:
-        error_message_fr = ex.args[1] if len(ex.args) > 1 else ex.args[0]
-        fill_new_line(excel_path, None, None, None, None, "Oui", error_message_fr + timestamp_of_saved_image)
+        fill_new_line(excel_path, None, None, None, None, "Oui", ex.message_fr + timestamp_of_saved_image)
         raise ex
-
-    fill_new_line(
-        excel_path,
-        cni_data["validated"]["first_name"],
-        cni_data["validated"]["last_name"],
-        cni_data["validated"]["birth_date"],
-        cni_data["validated"]["birth_place"],
-        "Non",
-        None
-    )
+    else:
+        fill_new_line(
+            excel_path,
+            cni_data["validated"]["first_name"],
+            cni_data["validated"]["last_name"],
+            cni_data["validated"]["birth_date"],
+            cni_data["validated"]["birth_place"],
+            "Non",
+            None
+        )
 
     result = {
         "data": cni_data,

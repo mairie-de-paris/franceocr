@@ -31,10 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 
-import cv2
-import numpy as np
-
-
 def is_extracted(image):
     """Detect if document is already (almost) extracted"""
     return False

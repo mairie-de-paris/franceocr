@@ -219,6 +219,7 @@ def mrz_read_sex(text):
 
     if sex not in ('M', 'F'):
         raise InvalidMRZException(
+            "INVALID_MRZ_SEX",
             "Expected sex M/F lines, got {}".format(sex)
         )
 
@@ -230,6 +231,7 @@ def cni_mrz_to_dict(mrz_data):
 
     if len(mrz_data) != 2:
         raise InvalidMRZException(
+            "INVALID_MRZ_LINES_COUNT",
             "Expected 2 lines, got {}".format(len(mrz_data))
         )
 
@@ -241,6 +243,7 @@ def cni_mrz_to_dict(mrz_data):
 
     if len(mrz_data[0]) != 36:
         raise InvalidMRZException(
+            "INVALID_LINE0_LENGTH",
             "Expected line 0 to be 36-chars long, is {} ({})".format(
                 len(mrz_data[0]),
                 mrz_data[0],
@@ -255,6 +258,7 @@ def cni_mrz_to_dict(mrz_data):
 
     if len(mrz_data[1]) != 36:
         raise InvalidMRZException(
+            "INVALID_LINE1_LENGTH",
             "Expected line 1 to be 36-chars long, is {} ({})".format(
                 len(mrz_data[1]),
                 mrz_data[1],
@@ -308,6 +312,7 @@ def cni_mrz_to_dict(mrz_data):
 
     if values["id"] != "ID":
         raise InvalidMRZException(
+            "INVALID_MRZ_ID",
             "Expected id to be ID, got {}".format(values["id"])
         )
 
@@ -315,14 +320,17 @@ def cni_mrz_to_dict(mrz_data):
 
     if checksum_mrz(line2[0:12]) != values["checksum_emission"]:
         raise InvalidChecksumException(
+            "INVALID_EMIT_CHECKSUM",
             "Invalid emit checksum"
         )
     if checksum_mrz(line2[27:33]) != values["checksum_birth"]:
         raise InvalidChecksumException(
+            "INVALID_BIRTHDATE_CHECKSUM",
             "Invalid birth_date checksum"
         )
     if checksum_mrz(line1 + line2[:-1]) != values["checksum"]:
         raise InvalidChecksumException(
+            "INVALID_GLOBAL_CHECKSUM",
             "Invalid global checksum"
         )
 
@@ -334,7 +342,7 @@ def process_cni_mrz(image, improved):
         mrz_image = cni_mrz_extract(image, improved)
     except Exception as ex:
         logging.debug("MRZ extraction failed", exc_info=True)
-        raise ImageProcessingException("MRZ extraction failed") from ex
+        raise ImageProcessingException("MRZ_EXTRACTION_FAILED", "MRZ extraction failed") from ex
 
     mrz_data = cni_mrz_read(mrz_image)
 

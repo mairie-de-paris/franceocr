@@ -29,12 +29,15 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+
+
 class InvalidUsageException(Exception):
     status_code = 400
 
-    def __init__(self, message, status_code=None, payload=None):
+    def __init__(self, code, message=None, status_code=None, payload=None):
         Exception.__init__(self)
 
+        self.code = code
         self.message = message
 
         if status_code is not None:
@@ -44,6 +47,8 @@ class InvalidUsageException(Exception):
 
     def to_dict(self):
         dict_output = dict(self.payload or ())
-        dict_output['message'] = self.message
+        dict_output["code"] = self.code
+        if self.message is not None:
+            dict_output["message"] = self.message
 
         return dict_output
