@@ -155,7 +155,7 @@ def cni_scan():
                           description: internal code from the administration of the issuing office
                         adm_code2:
                           type: string
-                          description: same first three characters as adm_code
+                          description: same first three characters as `adm_code`
                         birth_day:
                           type: integer
                           description: day of birth of the card's holder
