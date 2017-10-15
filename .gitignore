@@ -1,3 +1,5 @@
 .env
 uploads/
 logs/
+api/ocr.py
+api/static/img/
