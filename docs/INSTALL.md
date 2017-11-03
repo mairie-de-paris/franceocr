@@ -1,23 +1,35 @@
 # Installation
 
 ## Docker
-Une image docker prête à l'emploi est disponible sur [Docker Hub]().
-Une fois docker et docker-compose installés, il suffit de lancer le serveur avec la commande `docker-compose up -d`.
-Le service est alors disponible à l'adresse `http://localhost:5000`. Il est recommandé de le placer devant un reverse proxy HTTPS.
+A ready-to-use docker image is available on [Docker Hub](https://hub.docker.com/r/ltrezzini/franceocr-api/).
+Once docker and docker-compose are installed, you can launch the service using `docker-compose up -d`.
+The service is then available on `http://localhost:5000`. It is recommended to serve this API using an HTTPS reverse proxy.
 
-## Système
-Si docker n'est pas utilisable, il est possible d'installer les dépendances sur le système hôte.
-Suivant le système, il peut être nécessaire de les compiler depuis les sources (obligatoire pour Tesseract 4).
+## System
+If you can't use docker, it is possible to run this service directly on the host system.
+You will have to compile and install all the dependencies with the correct versions.
+You can follow the detailed procedure available in `Dockerfile` (archlinux base image) and `Dockerfile_centos` (centos base image).
 
-### Dépendances
+### Dependencies
+The service requires the following libraries, with their own dependencies installed:
 - python>=3.5
 - numpy>=1.10
 - opencv>=3
 - [tesseract>=4](https://github.com/tesseract-ocr/tesseract/wiki/Compiling)
 
-Toutes les dépendances python stipulées dans le fichier `requirements.txt`.
-Il est conseillé des les installer avec `pip install -r requirements.txt`.
+All python dependencies are listed in the `requirements.txt` file.
+You can install them using `pip install -r requirements.txt`.
 
-### Lancement
-Il est recommandé d'utiliser un serveur WSGI pour executer le serveur. Nous recommandons gunicorn.
-La commande de base, ajustable selon les besoins, est `gunicorn --config api/gunicorn.conf --log-config api/logging.conf -b :8000 --chdir api server:server`.
+### Running
+For security and performance reasons, you should use a WSGI server to run the python API.
+We recommand to use `gunicorn`.
+
+The following command should do the trick:
+`gunicorn --config api/gunicorn.conf --log-config api/logging.conf -b :5000 --chdir api server:server`.
+
+As the API is stateless and doesn't require any database or external service, there are no specific tasks or conditions
+to start or stop the service.
+
+### Logging
+All the logs are outputed at WARNING level to STDOUT in JSON format.
+You should edit `logging.conf` if you want to alter this behavior.
