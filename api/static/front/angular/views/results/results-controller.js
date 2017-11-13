@@ -5,13 +5,13 @@ angular.module('myApp.results', ['myApp.scanService'])
         //putting data from scanService in $scope variables
         $scope.scanData = scanService.getScanData();
         $scope.prettyScanData = JSON.stringify(JSON.parse($scope.scanData), null, 4);
-        $scope.lastName = $scope.scanData.data.last_name_ocr;
-        $scope.firstName = $scope.scanData.data.first_name_ocr;
-        $scope.birthDate = $scope.scanData.data.birth_date_ocr;
-        $scope.birthPlace = $scope.scanData.data.birth_place_ocr;
-        $scope.birthCityExists = $scope.scanData.data.birth_place_exists;
-        $scope.convertedBirthPlace = $scope.scanData.data.birth_place_corrected;
-        $scope.similarBirthCities = $scope.scanData.data.birth_place_similar;
+        $scope.lastName = $scope.scanData.data.validated.last_name;
+        $scope.firstName = $scope.scanData.data.validated.first_name;
+        $scope.birthDate = $scope.scanData.data.validated.birth_date;
+        $scope.birthPlace = $scope.scanData.data.ocr.birth_place;
+        $scope.birthCityExists = $scope.scanData.data.validated.birth_place_exists;
+        $scope.convertedBirthPlace = $scope.scanData.data.validated.birth_place;
+        $scope.similarBirthCities = $scope.scanData.data.validated.birth_place_similar;
         $scope.extractedImgUrl = "/" + $scope.scanData.image_path;
         $scope.excelDataUrl = "/" + $scope.scanData.excel_data_path;
 
