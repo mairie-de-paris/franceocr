@@ -3,7 +3,9 @@ version: "2"
 services:
     api:
         image: ltrezzini/franceocr-api
-        build: api
+        build:
+            dockerfile: Dockerfile_centos
+            context: api
         volumes:
             - api-data:/uploads:rw
         ports:
