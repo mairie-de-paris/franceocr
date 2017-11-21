@@ -4,7 +4,7 @@ angular.module('myApp.results', ['myApp.scanService'])
 
         //putting data from scanService in $scope variables
         $scope.scanData = scanService.getScanData();
-        $scope.prettyScanData = JSON.stringify(JSON.parse($scope.scanData), null, 4);
+        $scope.prettyScanData = JSON.stringify($scope.scanData, null, 4);
         $scope.lastName = $scope.scanData.data.validated.last_name;
         $scope.firstName = $scope.scanData.data.validated.first_name;
         $scope.birthDate = $scope.scanData.data.validated.birth_date;
@@ -21,10 +21,11 @@ angular.module('myApp.results', ['myApp.scanService'])
 
         $scope.convertDate = function (originalDate) {
             // convert daymonthyear to day/month/year
-            var day = originalDate[0]+originalDate[1];
-            var month = originalDate[2]+originalDate[3];
-            var year = originalDate[4]+originalDate[5]+originalDate[6]+originalDate[7];
-            return day+'/'+month+'/'+year;
+
+            var day = originalDate[8] + originalDate[9];
+            var month = originalDate[5] + originalDate[6];
+            var year = originalDate[0] + originalDate[1] + originalDate[2] + originalDate[3];
+            return day + '/' + month + '/' + year;
         }
 
         $scope.convertFirstName = function (originalName) {

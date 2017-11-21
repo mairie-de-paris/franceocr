@@ -58,7 +58,8 @@ def edge_detect(channel):
 
 
 def find_significant_contours(edged_image, ratio=0.05, approx=False):
-    """Find contours big enough.
+    """
+    Find contours big enough.
 
     The image must have strong edges for the function to work properly.
     """
@@ -91,6 +92,9 @@ def find_significant_contours(edged_image, ratio=0.05, approx=False):
 
 
 def extract_document(image):
+    """
+    Extract the document from the image
+    """
     orig0 = image.copy()
     orig = image.copy()
     # === Beginning of the pass 0 of the extraction === #
@@ -272,6 +276,9 @@ def extract_document(image):
 
 
 def improve_image(image):
+    """
+    Improve the image by removing its background and binarizing it
+    """
     image = imutils.resize(image, width=IMAGE_WIDTH)
 
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)

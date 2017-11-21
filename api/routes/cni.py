@@ -88,6 +88,9 @@ def cni_scan():
             exception:
               type: string
               description: exception name
+            code:
+              type: string
+              description: exception code
             message:
               type: string
               description: exception message

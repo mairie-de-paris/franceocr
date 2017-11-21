@@ -69,9 +69,8 @@ def checksum_mrz(string):
 
 
 def cni_mrz_extract(image, improved):
-    """Find and exctract the MRZ region from a CNI image.
-
-    FIXME comments
+    """
+    Find and extract the MRZ region from a CNI image.
     """
     # resize the image, and convert it to grayscale
     image = imutils.resize(image, width=900)
@@ -93,6 +92,7 @@ def cni_mrz_extract(image, improved):
     (minVal, maxVal) = (np.min(gradX), np.max(gradX))
     gradX = (255 * ((gradX - minVal) / (maxVal - minVal))).astype("uint8")
 
+    # disregard strong gradients above 400 pixels
     gradX[:400] = 0
 
     DEBUG_display_image(gradX, "GradX")
@@ -180,14 +180,14 @@ def cni_mrz_extract(image, improved):
             mrz_image = four_point_transform(image, bbox.reshape(4, 2))
             break
 
-    INFO_display_image(image)
+    INFO_display_image(mrz_image, "MRZ")
 
     # Further improve MRZ image quality
     thresh = threshold_local(mrz_image, 35, offset=13)
     mrz_image = mrz_image > thresh
     mrz_image = mrz_image.astype("uint8") * 255
 
-    INFO_display_image(mrz_image, "MRZ", resize=False)
+    INFO_display_image(mrz_image, "MRZ Improved", resize=False)
 
     return mrz_image
 

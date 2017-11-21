@@ -52,7 +52,8 @@ from franceocr.check_mrz_ocr import same_ocr_mrz
 
 
 def cni_locate_zones(image, improved):
-    """Locate and extract regions of interest in the image.
+    """
+    Locate and extract regions of interest in the image.
 
     Requires both the original image and the improved image.
     """
@@ -153,9 +154,8 @@ def cni_locate_zones(image, improved):
 
 
 def cni_read_zones(zones):
-    """OCR-read the extracted regions of interest
-
-    TODO
+    """
+    OCR-read the extracted regions of interest
     """
     for zone in zones:
         image = zones[zone]["image"]
@@ -183,7 +183,11 @@ def cni_validate_birth_year(mrz_year, ocr_year_string):
 
 
 def cni_process(image):
+    """
+    Run the whole processing pipeline on an image of a CNI
 
+    Return the result data as a dict
+    """
     if not is_extracted(image):
         try:
             extracted = extract_document(image)
@@ -223,6 +227,7 @@ def cni_process(image):
     last_name_corrected = mrz_data["last_name"]
     if len(last_name_corrected) == 25:
         last_name_corrected += zones["last_name"]["value"][25:]
+
     first_name_corrected = mrz_data["first_name"] + zones["first_name"]["value"][len(mrz_data["first_name"]):]
 
     birth_place_exists, birth_place_validated, similar_birth_places = city_exists(zones["birth_place"]["value"])
