@@ -192,7 +192,7 @@ def cni_process(image):
         try:
             extracted = extract_document(image)
         except Exception as ex:
-            logging.debug("Document extraction failed", exc_info=True)
+            logging.exception("Document extraction failed")
             raise ImageProcessingException(
                 "DOCUMENT_EXTRACTION_FAILED"
                 "Document extraction failed",
@@ -204,7 +204,7 @@ def cni_process(image):
     try:
         improved = improve_image(extracted)
     except Exception as ex:
-        logging.debug("Image improvement failed", exc_info=True)
+        logging.exception("Image improvement failed")
         raise ImageProcessingException(
             "IMAGE_IMPROVEMENT_FAILED",
             "Image improvement failed",
@@ -214,7 +214,7 @@ def cni_process(image):
     try:
         zones = cni_locate_zones(extracted, improved)
     except Exception as ex:
-        logging.debug("Zones location failed", exc_info=True)
+        logging.exception("Zones location failed")
         raise ImageProcessingException(
             "ZONES_LOCATION_FAILED",
             "Zones location failed",
@@ -237,7 +237,7 @@ def cni_process(image):
     if not(same_ocr_mrz(mrz_data, zones)):
         logging.debug("MRZ and OCR data don't match {} {}".format(
             mrz_data,
-            [zone["value"] for zone in zones if "value" in zone]
+            [zone["value"] for zone in zones.values() if "value" in zone]
         ))
         raise ImageProcessingException(
             "INCONSISTENT_OCR_MRZ",

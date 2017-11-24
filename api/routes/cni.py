@@ -56,7 +56,7 @@ cni_blueprint = Blueprint("cni", __name__)
 @cni_blueprint.errorhandler(InvalidMRZException)
 @cni_blueprint.errorhandler(InvalidOCRException)
 def handle_errors(error):
-    logging.warn("FranceOCR exception", exc_info=True)
+    logging.warn("FranceOCR exception")
     response = jsonify({
         "exception": type(error).__name__,
         "code": error.code,

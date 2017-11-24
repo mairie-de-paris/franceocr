@@ -341,7 +341,7 @@ def process_cni_mrz(image, improved):
     try:
         mrz_image = cni_mrz_extract(image, improved)
     except Exception as ex:
-        logging.debug("MRZ extraction failed", exc_info=True)
+        logging.exception("MRZ extraction failed")
         raise ImageProcessingException("MRZ_EXTRACTION_FAILED", "MRZ extraction failed") from ex
 
     mrz_data = cni_mrz_read(mrz_image)
