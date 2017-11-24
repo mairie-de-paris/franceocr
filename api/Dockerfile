@@ -12,13 +12,13 @@ WORKDIR /app
 RUN echo \
     && pacman -Sy \
     && pacman -S --needed --noconfirm opencv python-numpy hdf5 ghostscript \
-    && pacman -S --needed --noconfirm python-pip git gcc make autoconf-archive automake pkg-config leptonica imagemagick \
-    && git clone https://github.com/tesseract-ocr/tesseract.git /deps/tesseract \
-    && cd /deps/tesseract \
-    && ./autogen.sh && ./configure && make -j $(nproc) && make install \
-    && rm -r /deps
+    && pacman -S --needed --noconfirm python-pip gcc make autoconf-archive automake pkg-config leptonica imagemagick
 
-# TODO: freeze requirements and cleanup install
+RUN mkdir /deps && cd /deps && wget https://github.com/tesseract-ocr/tesseract/archive/eba0ae3b88a46a93e981770caa0b148d65cc4468.zip \
+    && unzip eba0ae3b88a46a93e981770caa0b148d65cc4468.zip -d tesseract/ && cd tesseract/tesseract-eba0ae3b88a46a93e981770caa0b148d65cc4468/ \
+    && ./autogen.sh && ./configure && make -j $(nproc) && make install \
+    && rm -rf /deps
+
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
