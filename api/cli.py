@@ -136,13 +136,13 @@ if __name__ == "__main__":
                 cni_data = cni_process(image)
                 success = True
                 print("last_name_ocr", cni_data["ocr"]["last_name"])
-                print("last_name_corrected", cni_data["validated"]["last_name"])
+                print("last_name_validated", cni_data["validated"]["last_name"])
                 print("first_name_ocr", cni_data["ocr"]["first_name"])
-                print("first_name_corrected", cni_data["validated"]["first_name"])
+                print("first_name_validated", cni_data["validated"]["first_name"])
                 print("birth_date_ocr", cni_data["ocr"]["birth_date"])
-                print("birth_date_ocr", cni_data["validated"]["birth_date"])
+                print("birth_date_validated", cni_data["validated"]["birth_date"])
                 print("birth_place_ocr", cni_data["ocr"]["birth_place"])
-                print("birth_place_corrected", cni_data["validated"]["birth_place"])
+                print("birth_place_validated", cni_data["validated"]["birth_place"])
             except Exception as ex:
                 if image_path in BADS:
                     success = True
