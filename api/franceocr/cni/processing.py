@@ -235,7 +235,10 @@ def cni_process(image):
     birth_year_validated = cni_validate_birth_year(mrz_data["birth_year"], zones["birth_date"]["value"][-4:])
 
     if not(same_ocr_mrz(mrz_data, zones)):
-        logging.debug("MRZ and OCR data don't match", exc_info=True)
+        logging.debug("MRZ and OCR data don't match {} {}".format(
+            mrz_data,
+            [zone["value"] for zone in zones if "value" in zone]
+        ))
         raise ImageProcessingException(
             "INCONSISTENT_OCR_MRZ",
             "MRZ and OCR data don't match",

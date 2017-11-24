@@ -6,11 +6,19 @@ def same_ocr_mrz(mrz_data, zones):
     first_names_mrz = mrz_data["first_name"].split()
     first_name_is_valid = True
     first_names_to_check = len(first_names_mrz) if not first_name_mrz_limited else len(first_names_mrz) - 1
+
     for i in range(first_names_to_check):
         if first_names_mrz[i] != first_names_ocr[i]:
             first_name_is_valid = False
+
     if first_name_mrz_limited:
-        if first_names_mrz[-1] != first_names_ocr[-1][:len(first_names_mrz[-1])]:
+        cut_name_accumulator = 0
+        for cut_name_idx, first_name in enumerate(first_names_ocr):
+            cut_name_accumulator += len(first_name)
+            if cut_name_accumulator >= 13:
+                break
+
+        if first_names_mrz[-1] != first_names_ocr[cut_name_idx][:len(first_names_mrz[-1])]:
             first_name_is_valid = False
 
     return last_name_is_valid and first_name_is_valid
