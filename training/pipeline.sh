@@ -3,10 +3,10 @@ rm -rf franceocr_from_eng/
 mkdir -p franceocr_from_eng/
 
 # Add tif/box pairs to lang data
-cp franceocrdata/* langdata/eng/
-# cp eng.franceocr.exp0.{box,tif} langdata/eng/
+cp franceocrtrain/* langdata/eng/
+cp franceocreval/* langdata/eng/
 
-# Generate training data (lstmf files)  # "DejaVu Sans"
+# Generate training data (lstmf files)
 ../../tesseract/training/tesstrain.sh \
     --lang eng \
     --langdata_dir langdata \
