@@ -57,5 +57,20 @@
     <!-- Services -->
     <script src="angular/services/scan-service.js"></script>
 
+    <!-- API Version -->
+    <script type="text/javascript">
+      var api_version = "not found";
+      jQuery.getJSON("/api/swagger.json", function (json) {
+        api_version = json.info.version;
+      });
+    </script>
+
+    <div class="topcorner">
+      API Version :
+      <script type="text/javascript">
+        document.write(api_version)
+      </script>
+    </div>
+
   </body>
 </html>
