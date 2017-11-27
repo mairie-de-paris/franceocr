@@ -150,23 +150,20 @@ def extract_document(image):
     DEBUG_display_image(image, "Image", alone=False)
     DEBUG_display_image(image_blue, "Blue component")
 
-    # Clean up blue component to find orientation
-    image_blue_2 = cv2.erode(image_blue, None, iterations=5)
-    # blackhatKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (50, 50))
-    # image_blue_2 = cv2.morphologyEx(image_blue_2, cv2.MORPH_CLOSE, blackhatKernel)
-    # image_blue_2 = cv2.threshold(image_blue_2, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-
-    DEBUG_display_image(image_blue_2, "Blue component 2")
-
     # Find contours
-    significant = find_significant_contours(image_blue, ratio=0)
+    significant = find_significant_contours(image_blue, ratio=0, approx=True)
 
-    contour = significant[0]
+    if len(significant) > 1 and cv2.contourArea(significant[0]) / cv2.contourArea(significant[1]) < 1.3:
+        logging.debug("Merged blue contours !")
+        contour = cv2.convexHull(np.vstack([significant[0], significant[1]]))
+    else:
+        contour = significant[0]
+
     bbox = cv2.boxPoints(cv2.minAreaRect(contour))
     bbox = order_points(bbox)
 
     # Make sure the document has the right orientation
-    accumulator = np.where(image_blue_2)
+    accumulator = np.where(image_blue)
     center_x = np.median(accumulator[1])
     center_y = np.median(accumulator[0])
 
@@ -197,11 +194,11 @@ def extract_document(image):
 
     bbox = order_points(bbox)
 
-    horizontal_factor = 1.03
+    horizontal_factor = 1.05
     bbox[0], bbox[1] = bbox[1] + horizontal_factor * (bbox[0] - bbox[1]), bbox[0] + horizontal_factor * (bbox[1] - bbox[0])
     bbox[3], bbox[2] = bbox[2] + horizontal_factor * (bbox[3] - bbox[2]), bbox[3] + horizontal_factor * (bbox[2] - bbox[3])
 
-    HEADER_TO_BODY = 1600 / 125
+    HEADER_TO_BODY = 1800 / 125
     right_vector = bbox[2] - bbox[1]
     left_vector = bbox[3] - bbox[0]
     height, width = image.shape[:2]
