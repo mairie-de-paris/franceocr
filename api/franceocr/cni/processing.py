@@ -255,7 +255,10 @@ def cni_process(image):
             ).date().isoformat(),
             "birth_place": birth_place_validated,
             "birth_place_exists": birth_place_exists,
-            "birth_place_similar": similar_birth_places,
+            "birth_place_similar": [
+                dict(name=item[0], score=item[1])
+                for item in similar_birth_places
+            ],
             "first_name": first_name_corrected,
             "last_name": last_name_corrected,
         },

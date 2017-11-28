@@ -71,10 +71,13 @@ def cni_scan():
     """
     Scan a French National Identity Card
     ---
+    summary: scan a French National Identity Card
     tags:
       - cni
+    consumes:
+      - multipart/form-data
     parameters:
-      - in: body
+      - in: formData
         name: image
         type: file
         required: true
@@ -126,7 +129,17 @@ def cni_scan():
                           description: does the birth place of the card's holder exist?
                         birth_place_similar:
                           type: array
-                          description: 5 most similar city names from OCR'd birth place as a couple (name, match percentage)
+                          description: 5 most similar city names from OCR'd birth place
+                          items:
+                            schema:
+                              id: SimilarCity
+                              properties:
+                                name:
+                                  type: string
+                                  description: city name
+                                score:
+                                  type: integer
+                                  description: similarity score
                         first_name:
                           type: string
                           description: first names of the card's holder
