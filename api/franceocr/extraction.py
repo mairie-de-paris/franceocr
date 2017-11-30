@@ -57,7 +57,7 @@ def edge_detect(channel):
     return sobel
 
 
-def find_significant_contours(edged_image, ratio=0.05, approx=False):
+def find_significant_contours(edged_image, ratio=0.05, approx=False, debug_image=None):
     """
     Find contours big enough.
 
@@ -72,6 +72,9 @@ def find_significant_contours(edged_image, ratio=0.05, approx=False):
 
     # Sort by area
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
+    if debug_image is not None:
+        cv2.drawContours(debug_image, contours[:2], -1, (255, 255, 0), 3)
 
     # Prune small contours
     tooSmall = edged_image.size * ratio
@@ -148,16 +151,36 @@ def extract_document(image):
     image_blue = cv2.GaussianBlur(image_blue, (5, 5), 0)
 
     DEBUG_display_image(image, "Image", alone=False)
-    DEBUG_display_image(image_blue, "Blue component")
 
     # Find contours
-    significant = find_significant_contours(image_blue, ratio=0, approx=True)
+    image_blue_debug = image.copy()
+    significant = find_significant_contours(image_blue, ratio=0, approx=True, debug_image=image_blue_debug)
+    DEBUG_display_image(image_blue_debug, "Blue component")
 
-    if len(significant) > 1 and cv2.contourArea(significant[0]) / cv2.contourArea(significant[1]) < 1.3:
-        logging.debug("Merged blue contours !")
-        contour = cv2.convexHull(np.vstack([significant[0], significant[1]]))
-    else:
-        contour = significant[0]
+    contour = significant[0]
+    if len(significant) > 1:
+        merged_contour = cv2.convexHull(np.vstack([significant[0], significant[1]]))
+        merged_contour_area = cv2.contourArea(merged_contour)
+        large_contour_area = cv2.contourArea(significant[0])
+        small_contour_area = cv2.contourArea(significant[1])
+        contours_area_ratio = large_contour_area / small_contour_area
+
+        area_increase = 1 - (large_contour_area + small_contour_area) / merged_contour_area
+
+        logging.debug(
+            "Should we merge ? contours=%d large_contour_area=%f small_contour_area=%f "
+            "merged_contour_area=%f contours_area_ratio=%f area_increase=%f",
+            len(significant),
+            large_contour_area,
+            small_contour_area,
+            merged_contour_area,
+            contours_area_ratio,
+            area_increase
+        )
+
+        if contours_area_ratio < 4 and area_increase < 0.15:
+            logging.debug("Merged blue contours !")
+            contour = merged_contour
 
     bbox = cv2.boxPoints(cv2.minAreaRect(contour))
     bbox = order_points(bbox)

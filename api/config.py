@@ -46,6 +46,6 @@ ALLOWED_MIME = set([
     "image/png",
     "application/pdf",
 ])
-MAX_CONTENT_LENGTH = 5 * 1024 * 1024
+MAX_CONTENT_LENGTH = os.getenv("MAX_CONTENT_LENGTH", 50 * 1024 * 1024)
 
 KEEP_SCANS = os.getenv("KEEP_SCANS", False)

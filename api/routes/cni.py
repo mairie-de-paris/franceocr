@@ -83,6 +83,8 @@ def cni_scan():
         required: true
         description: a picture of a CNI card (pdf, png, or jpeg)
     responses:
+      413:
+        description: Payload Too Large (usually image upload)
       400:
         description: Bad request
         schema:
@@ -260,11 +262,6 @@ def cni_scan():
         image_file.save(filepath)
 
     timestamp_of_saved_image = " ({:%Y-%b-%d %H:%M})".format(datetime.datetime.now())
-
-    # image = np.array(Image.open(image_file.stream))
-    # image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-    # print(image.shape)
-    # print(image.mean(axis=0).mean(axis=0))
 
     # FIXME
     image = cv2.imread(filepath)

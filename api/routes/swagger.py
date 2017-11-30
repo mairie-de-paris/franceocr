@@ -42,7 +42,7 @@ swagger_blueprint = Blueprint("swagger", __name__)
 @swagger_blueprint.route("/api/swagger.json")
 def swagger_api():
     swag = swagger(current_app)
-    swag["info"]["version"] = "1.0.0"
+    swag["info"]["version"] = "1.0.1"
     swag["info"]["title"] = "FranceOCR API"
     return jsonify(swag)
 
