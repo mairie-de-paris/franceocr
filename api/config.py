@@ -33,19 +33,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 
-DEBUG = True
-HOST = os.getenv('HOST', '0.0.0.0')
-PORT = int(os.getenv('PORT', '5000'))
+DEBUG = os.getenv("DEBUG", False)
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "5000"))
 
 # Grabs the folder where the script runs.
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 UPLOAD_FOLDER = os.path.abspath(BASEDIR + "/../uploads")
 ALLOWED_MIME = set([
-    'image/jpeg',
-    'image/png',
-    'application/pdf',
+    "image/jpeg",
+    "image/png",
+    "application/pdf",
 ])
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024
 
-KEEP_SCANS = False
+KEEP_SCANS = os.getenv("KEEP_SCANS", False)
