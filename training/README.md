@@ -9,9 +9,30 @@ make training
 sudo make training-install
 ```
 
-You must download `eng` and `common` tesseract training data in the `/training/langdata` folder.
+You have to apply a local patch to tesseract:
 
-It is recommended to install `jTessBoxEditor`.
+```
+diff --git a/training/tesstrain_utils.sh b/training/tesstrain_utils.sh
+index 227d15f3..b354ce50 100755
+--- a/training/tesstrain_utils.sh
++++ b/training/tesstrain_utils.sh
+@@ -398,8 +398,12 @@ phase_E_extract_features() {
+     tlog "Using TESSDATA_PREFIX=${TESSDATA_PREFIX}"
+     local counter=0
+     for img_file in ${img_files}; do
++        local img_config=""
++        if [[ $img_file == *franceocr* ]]; then
++            img_config="--psm 7"
++        fi
+         run_command tesseract ${img_file} ${img_file%.*} \
+-            ${box_config} ${config} &
++            ${img_config} ${box_config} ${config} &
+       let counter=counter+1
+       let rem=counter%par_factor
+       if [[ "${rem}" -eq 0 ]]; then
+```
+
+You must download `eng` and `common` tesseract training data in the `/training/langdata` folder.
 
 ## Pipeline
 
@@ -33,18 +54,9 @@ It runs the following steps :
 
 ## Utilities
 
-Two utility scripts are provided.
-
 ### `make_box.py`
 
 `make_box.py` is a Python script which helps bootstrap box files.
 
-Provided a tiff image of a string, the x-coordinate of the first letter and the string, the script generates a box file associated to the tiff. It generally requires manual modifications of the box file with `jTessBoxEditor` to better fit the individual letters.
-
-### `box_editor.sh`
-
-`box_editor.sh` is a simple script which launches `jTessBoxEditor`.
-
-It expects the binary to sit in a sibling folder of this repository.
-
-`jTessBoxEditor` is a graphical tool to edit box files.
+Provided a tiff image of a string, the x-coordinate of the first letter and the string, the script generates a box file associated to the tiff.
+E.g. `python make_box.py to_process/eng.franceocr53.exp0.tif 0 "PARIS (75)"`

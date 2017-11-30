@@ -7,6 +7,6 @@ lstmtraining \
     --traineddata /usr/local/share/tessdata/eng.traineddata \
     --train_listfile franceocr_from_eng/franceocr.training_files.txt \
     --eval_listfile franceocr_from_eng/franceocr.eval_files.txt \
-    --target_error_rate 1 \
-    --debug_interval -1
+    --target_error_rate 0.1
+    # --debug_interval -1
     # --max_iterations 400 \
