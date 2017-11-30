@@ -83,8 +83,22 @@ def cni_scan():
         required: true
         description: a picture of a CNI card (pdf, png, or jpeg)
     responses:
+      400:
+        description: Bad request
+        schema:
+          id: APIError
+          properties:
+            exception:
+              type: string
+              description: exception name
+            code:
+              type: string
+              description: exception code
+            message:
+              type: string
+              description: exception message
       422:
-        description: FranceOCR processing exception
+        description: Unprocessable entity (FranceOCR processing exception)
         schema:
           id: APIError
           properties:
