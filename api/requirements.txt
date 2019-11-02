@@ -4,7 +4,7 @@ json-logging-py==0.2
 coverage==4.4.1
 
 requests==2.18.4
-Flask==0.12.2
+Flask==1.0
 Flask-Cors==3.0.2
 Flask-RESTful==0.3.6
 flask-swagger==0.2.13
